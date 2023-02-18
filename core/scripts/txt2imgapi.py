@@ -32,18 +32,20 @@ def chunk(it, size):
     it = iter(it)
     return iter(lambda: tuple(islice(it, size)), ())
 
-
-def load_model_from_config(config, ckpt, verbose=False):
+def load_model_from_config(config, ckpt, vae, verbose=False):
     print(f"Loading model from {ckpt}")
     if ckpt.endswith("safetensors"):
         pl_sd = load_file(ckpt, device="cpu")
         sd = pl_sd
     else:
         pl_sd = torch.load(ckpt, map_location="cpu")
+
     if "state_dict" in pl_sd:
         sd = pl_sd["state_dict"]
     else:
         sd = pl_sd
+
+    
     if "global_step" in pl_sd:
         print(f"Global Step: {pl_sd['global_step']}")
     model = instantiate_from_config(config.model)
@@ -57,7 +59,14 @@ def load_model_from_config(config, ckpt, verbose=False):
 
     model.cuda()
     model.eval()
-    return model.half()
+    model.half()
+
+    #this is done after model.half() to avoid  converting VAE weights to float16
+    if  vae:
+        vae_sd = torch.load(vae, map_location="cpu")["state_dict"]
+        model.first_stage_model.load_state_dict(vae_sd,  strict=False)
+
+    return model
 
 def put_watermark(img, wm_encoder=None):
     if wm_encoder is not None:
@@ -74,11 +83,12 @@ def generate(
     steps=40,
     seed="random",
     ckpt="core/ldm/models/sdv1/1-5.safetensors",
+    vae="",
     precision="autocast",
     scale=7,
     ddim_eta=0.0,
     plms=False,
-    dpm=True,
+    dpm=False,
     H=512,
     W=512,
     C=4, #Latent Channels
@@ -94,7 +104,7 @@ def generate(
     seed_everything(seed)
 
     config = OmegaConf.load(f"{config_file}")
-    model = load_model_from_config(config, f"{ckpt}")
+    model = load_model_from_config(config, f"{ckpt}", f"{vae}")
     
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     model = model.to(device)
@@ -113,10 +123,10 @@ def generate(
 
     assert prompt is not None
     start_code = None
-    print(prompt)
-    print(negative_prompt)
-    print(H)
-    print(W)
+    
+    # might remove but generally makes results better
+    negative_prompt += "lowres, bad anatomy, bad hands, text, missing finger, extra digits, fewer digits, blurry, mutated hands and fingers, poorly drawn face, mutation, deformed face, ugly, bad proportions, extra limbs, extra face, double head, extra head, extra feet, monster, logo, cropped, worst quality, low quality, normal quality, jpeg, humpbacked, long body, long neck, jpeg artifacts"
+
     precision_scope = autocast if precision == "autocast" else nullcontext
     with torch.no_grad(), \
         precision_scope("cuda"), \
