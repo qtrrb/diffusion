@@ -22,7 +22,9 @@ from safetensors.torch import load_file
 import random
 import io
 
+from transformers import logging
 
+logging.set_verbosity_error()
 torch.set_grad_enabled(False)
 
 def chunk(it, size):
@@ -53,11 +55,12 @@ def load_model_from_config(config, ckpt, verbose=False):
 
     model.cuda()
     model.eval()
-    return model.half() #ultra-basic optimization to run on 8gb TODO: improve
+    return model.half()
 
 def put_watermark(img, wm_encoder=None):
     if wm_encoder is not None:
-        img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+        img = cv2.cvtColor(np.array(img
+        ), cv2.COLOR_RGB2BGR)
         img = wm_encoder.encode(img, 'dwtDct')
         img = Image.fromarray(img[:, :, ::-1])
     return img
@@ -66,17 +69,15 @@ def put_watermark(img, wm_encoder=None):
 def generate(
     prompt="",
     negative_prompt="",
-    steps=30,
+    steps=40,
     seed="random",
-    ckpt="ldm/models/sdv1/analog-model.safetensors",
-    n_samples=1,
-    n_iter=1,
+    ckpt="ldm/models/sdv1/anime.safetensors",
     precision="autocast",
     scale=7,
     ddim_eta=0.0,
     plms=True,
     dpm=False,
-    H=512,
+    H=768,
     W=512,
     C=4, #Latent Channels
     f=8, #downsampling factor
@@ -103,53 +104,49 @@ def generate(
     else:
         sampler = DDIMSampler(model)
 
-    print("Creating invisible watermark encoder (see https://github.com/ShieldMnt/invisible-watermark)...")
-    wm = "SDV2"
-    wm_encoder = WatermarkEncoder()
-    wm_encoder.set_watermark('bytes', wm.encode('utf-8'))
+#    print("Creating invisible watermark encoder (see https://github.com/ShieldMnt/invisible-watermark)...")
+#    wm = "SDV2"
+#    wm_encoder = WatermarkEncoder()
+#    wm_encoder.set_watermark('bytes', wm.encode('utf-8'))
 
-    batch_size = n_samples
     assert prompt is not None
-    data = [batch_size * [prompt]]
     start_code = None
-
+    print(prompt)
+    print(negative_prompt)
+    print(H)
+    print(W)
     precision_scope = autocast if precision == "autocast" else nullcontext
     with torch.no_grad(), \
         precision_scope("cuda"), \
         model.ema_scope():
             all_samples = list()
-            for n in trange(n_iter, desc="Sampling"):
-                for prompts in tqdm(data, desc="data"):
-                    uc = model.get_learned_conditioning(batch_size * [negative_prompt])
-                    if isinstance(prompts, tuple):
-                        prompts = list(prompts)
-                    c = model.get_learned_conditioning(prompts)
-                    shape = [C, H // f, W // f]
-                    samples, _ = sampler.sample(S=steps,
-                                                     conditioning=c,
-                                                     batch_size=n_samples,
-                                                     shape=shape,
-                                                     verbose=False,
-                                                     unconditional_guidance_scale=scale,
-                                                     unconditional_conditioning=uc,
-                                                     eta=ddim_eta,
-                                                     x_T=start_code)
 
-                    x_samples = model.decode_first_stage(samples)
-                    x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
+            uc = model.get_learned_conditioning([negative_prompt])
+            c = model.get_learned_conditioning([prompt])
+            shape = [C, H // f, W // f]
+            samples, _ = sampler.sample(S=steps,
+                                                conditioning=c,
+                                                batch_size=1,
+                                                shape=shape,
+                                                verbose=False,
+                                                unconditional_guidance_scale=scale,
+                                                unconditional_conditioning=uc,
+                                                eta=ddim_eta,
+                                                x_T=start_code)
 
-                    for x_sample in x_samples:
-                        x_sample = 255. * rearrange(x_sample.cpu().numpy(), 'c h w -> h w c')
-                        img = Image.fromarray(x_sample.astype(np.uint8))
-                        img = put_watermark(img, wm_encoder)
-                        img_byte_arr = io.BytesIO()
-                        img.save(img_byte_arr, format='png')
-                        img_byte_arr = img_byte_arr.getvalue()
+            x_samples = model.decode_first_stage(samples)
+            x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
 
-                    all_samples.append(x_samples)
+            for x_sample in x_samples:
+                x_sample = 255. * rearrange(x_sample.cpu().numpy(), 'c h w -> h w c')
+                img = Image.fromarray(x_sample.astype(np.uint8))
+                img_byte_arr = io.BytesIO()
+                img.save(img_byte_arr, format='png')
+                img_byte_arr = img_byte_arr.getvalue()
+
+            all_samples.append(x_samples)
 
 
-    print(f"Your samples are ready and waiting for you here"
-          f" \nEnjoy.")
+    print("Done!")
 
     return img_byte_arr
