@@ -826,6 +826,7 @@ class LatentDiffusion(DDPM):
         return self.first_stage_model.decode(z)
 
     @torch.no_grad()
+    @torch.autocast("cuda")
     def encode_first_stage(self, x):
         return self.first_stage_model.encode(x)
 

@@ -20,6 +20,9 @@ from scripts.txt2img import put_watermark
 from ldm.util import instantiate_from_config
 from ldm.models.diffusion.ddim import DDIMSampler
 
+from safetensors.torch import load_file
+
+import random
 
 def chunk(it, size):
     it = iter(it)
@@ -28,10 +31,17 @@ def chunk(it, size):
 
 def load_model_from_config(config, ckpt, verbose=False):
     print(f"Loading model from {ckpt}")
-    pl_sd = torch.load(ckpt, map_location="cpu")
+    if ckpt.endswith("safetensors"):
+        pl_sd = load_file(ckpt, device="cpu")
+        sd = pl_sd
+    else: 
+        pl_sd = torch.load(ckpt, map_location="cpu")
     if "global_step" in pl_sd:
         print(f"Global Step: {pl_sd['global_step']}")
-    sd = pl_sd["state_dict"]
+    if "state_dict" in pl_sd:
+        sd = pl_sd["state_dict"]
+    else:
+        sd = pl_sd
     model = instantiate_from_config(config.model)
     m, u = model.load_state_dict(sd, strict=False)
     if len(m) > 0 and verbose:
@@ -43,7 +53,7 @@ def load_model_from_config(config, ckpt, verbose=False):
 
     model.cuda()
     model.eval()
-    return model
+    return model.half()
 
 
 def load_img(path):
@@ -51,7 +61,7 @@ def load_img(path):
     w, h = image.size
     print(f"loaded input image of size ({w}, {h}) from {path}")
     w, h = map(lambda x: x - x % 64, (w, h))  # resize to integer multiple of 64
-    image = image.resize((w, h), resample=PIL.Image.LANCZOS)
+    image = image.resize((w, h), resample=PIL.Image.Resampling.LANCZOS)
     image = np.array(image).astype(np.float32) / 255.0
     image = image[None].transpose(0, 3, 1, 2)
     image = torch.from_numpy(image)
@@ -126,7 +136,7 @@ def main():
     parser.add_argument(
         "--n_samples",
         type=int,
-        default=2,
+        default=1,
         help="how many samples to produce for each given prompt. A.k.a batch size",
     )
 
@@ -147,7 +157,7 @@ def main():
     parser.add_argument(
         "--strength",
         type=float,
-        default=0.8,
+        default=0.7,
         help="strength for noising/unnoising. 1.0 corresponds to full destruction of information in init image",
     )
 
@@ -159,13 +169,14 @@ def main():
     parser.add_argument(
         "--config",
         type=str,
-        default="configs/stable-diffusion/v2-inference.yaml",
+        default="configs/stable-diffusion/v1-inference.yaml",
         help="path to config which constructs model",
     )
     parser.add_argument(
         "--ckpt",
         type=str,
         help="path to checkpoint of model",
+        default="ldm/models/sdv1/analog-model.safetensors"
     )
     parser.add_argument(
         "--seed",
@@ -182,7 +193,7 @@ def main():
     )
 
     opt = parser.parse_args()
-    seed_everything(opt.seed)
+    seed_everything(random.randint(0,9999999))
 
     config = OmegaConf.load(f"{opt.config}")
     model = load_model_from_config(config, f"{opt.ckpt}")
