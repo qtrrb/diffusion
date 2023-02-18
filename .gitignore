@@ -167,3 +167,4 @@ cython_debug/
 # Models
 *.ckpt
 *.safetensors
+*.pt
