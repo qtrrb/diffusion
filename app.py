@@ -17,7 +17,7 @@ def read_root():
     return {"Hello": "World"}
 
 @app.post(
-    "/txt2image", 
+    "/txt2img", 
     response_class=Response,
     responses = {
         200: {
