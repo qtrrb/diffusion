@@ -104,7 +104,6 @@ def generate(
 
     if seed == "random":
         seed = random.randint(0,999999)
-    seed = 903981
     seed_everything(seed)
 
     config = OmegaConf.load(f"{config_file}")
