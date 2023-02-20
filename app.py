@@ -11,10 +11,11 @@ class Prompt(BaseModel):
     height: int = 512
     width: int = 512
     model: str = "sdv1/1-5.safetensors"
+    vae: str = ""
 
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
+    return {"Status": "API running"}
 
 @app.post(
     "/txt2img", 
@@ -27,6 +28,6 @@ def read_root():
 
 )
 def generateImage(prompt: Prompt):
-    image_bytes: bytes = generate(prompt=prompt.prompt,negative_prompt=prompt.negative_prompt,W=prompt.width, H=prompt.height, ckpt="core/ldm/models/" + prompt.model,)
+    image_bytes: bytes = generate(prompt=prompt.prompt,negative_prompt=prompt.negative_prompt,W=prompt.width, H=prompt.height, ckpt=prompt.model, vae=prompt.vae)
     # Return the image in the response
     return Response(content=image_bytes, media_type="image/png")

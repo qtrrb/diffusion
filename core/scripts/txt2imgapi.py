@@ -63,6 +63,7 @@ def load_model_from_config(config, ckpt, vae, verbose=False):
 
     #this is done after model.half() to avoid  converting VAE weights to float16
     if  vae:
+        vae = "core/ldm/models/" + vae
         vae_sd = torch.load(vae, map_location="cpu")["state_dict"]
         model.first_stage_model.load_state_dict(vae_sd,  strict=False)
 
@@ -82,7 +83,7 @@ def generate(
     negative_prompt="",
     steps=40,
     seed="random",
-    ckpt="core/ldm/models/sdv1/1-5.safetensors",
+    ckpt="sdv1/1-5.safetensors",
     vae="",
     precision="autocast",
     scale=7,
@@ -99,8 +100,11 @@ def generate(
     else:
         config_file="core/configs/stable-diffusion/v2-inference.yaml"
 
+    ckpt = "core/ldm/models/" + ckpt
+
     if seed == "random":
         seed = random.randint(0,999999)
+    seed = 903981
     seed_everything(seed)
 
     config = OmegaConf.load(f"{config_file}")
