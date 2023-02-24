@@ -10,10 +10,10 @@ A fork of [stable diffusion](https://github.com/Stability-AI/stablediffusion) th
 >
 > This project is heavily experimental and is subject to changes.
 
-- [ ] Image to Image API
 - [ ] Upscaling
 - [ ] Code refactoring
 - [ ] ...
+- [x] ~~Image to Image API~~
 - [x] ~~VAE loading~~
 - [x] ~~Safetensors Support~~
 - [x] ~~Default FP16 Models~~
