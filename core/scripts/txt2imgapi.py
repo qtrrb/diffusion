@@ -36,7 +36,6 @@ def load_model_from_config(config, ckpt, vae, verbose=False):
     print(f"Loading model from {ckpt}")
     if ckpt.endswith("safetensors"):
         pl_sd = load_file(ckpt, device="cpu")
-        sd = pl_sd
     else:
         pl_sd = torch.load(ckpt, map_location="cpu")
 
@@ -81,7 +80,7 @@ def put_watermark(img, wm_encoder=None):
 def generate(
     prompt="",
     negative_prompt="",
-    steps=40,
+    steps=30,
     seed="random",
     ckpt="sdv1/1-5.safetensors",
     vae="",
@@ -149,17 +148,16 @@ def generate(
                                                 eta=ddim_eta,
                                                 x_T=start_code)
 
-            x_samples = model.decode_first_stage(samples)
-            x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
+            x_sample = model.decode_first_stage(samples)
+            x_sample = torch.clamp((x_sample + 1.0) / 2.0, min=0.0, max=1.0)
 
-            for x_sample in x_samples:
-                x_sample = 255. * rearrange(x_sample.cpu().numpy(), 'c h w -> h w c')
-                img = Image.fromarray(x_sample.astype(np.uint8))
-                img_byte_arr = io.BytesIO()
-                img.save(img_byte_arr, format='png')
-                img_byte_arr = img_byte_arr.getvalue()
+            x_sample = 255. * rearrange(x_sample.cpu().numpy(), '1 c h w -> h w c')
+            img = Image.fromarray(x_sample.astype(np.uint8))
+            img_byte_arr = io.BytesIO()
+            img.save(img_byte_arr, format='png')
+            img_byte_arr = img_byte_arr.getvalue()
 
-            all_samples.append(x_samples)
+            all_samples.append(x_sample)
 
 
     print("Done!")
