@@ -1,6 +1,6 @@
 from core.scripts.txt2imgapi import generate
 from core.scripts.img2imgapi import generate_from_image
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import Response
 from pydantic import BaseModel
 
@@ -36,9 +36,14 @@ def read_root():
 
 )
 def txt2img(prompt: Prompt):
-    image_bytes: bytes = generate(prompt=prompt.prompt,negative_prompt=prompt.negative_prompt,W=prompt.width, H=prompt.height, ckpt=prompt.model, vae=prompt.vae)
-    # Return the image in the response
-    return Response(content=image_bytes, media_type="image/png")
+    try:
+        image_bytes: bytes = generate(prompt=prompt.prompt,negative_prompt=prompt.negative_prompt,W=prompt.width, H=prompt.height, ckpt=prompt.model, vae=prompt.vae)
+        # Return the image in the response
+        return Response(content=image_bytes, media_type="image/png")
+    except Exception as e:
+            print(e)
+            raise HTTPException(status_code=500, detail="Error generating image")
+
 
 @app.post(
     "/img2img", 
@@ -51,6 +56,10 @@ def txt2img(prompt: Prompt):
 
 )
 def img2img(prompt: ImagePrompt):
-    image_bytes: bytes = generate_from_image(prompt=prompt.prompt,negative_prompt=prompt.negative_prompt,init_img_url=prompt.image, ckpt=prompt.model, vae=prompt.vae)
-    # Return the image in the response
-    return Response(content=image_bytes, media_type="image/png")
+    try:
+        image_bytes: bytes = generate_from_image(prompt=prompt.prompt,negative_prompt=prompt.negative_prompt,init_img_url=prompt.image, ckpt=prompt.model, vae=prompt.vae)
+        # Return the image in the response
+        return Response(content=image_bytes, media_type="image/png")
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail="Error generating image")
