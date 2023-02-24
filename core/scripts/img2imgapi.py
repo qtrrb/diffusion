@@ -94,7 +94,7 @@ def generate_from_image(
     negative_prompt="",
     init_img_url="",
     steps=50,
-    seed=445302,
+    seed="random",
     ckpt="sdv1/1-5.safetensors",
     vae="",
     precision="autocast",
