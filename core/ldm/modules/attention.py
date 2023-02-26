@@ -20,6 +20,7 @@ except:
 import os
 _ATTN_PRECISION = os.environ.get("ATTN_PRECISION", "fp32")
 
+
 def exists(val):
     return val is not None
 
@@ -124,7 +125,7 @@ class SpatialSelfAttention(nn.Module):
         v = self.v(h_)
 
         # compute attention
-        b,c,h,w = q.shape
+        b, c, h, w = q.shape
         q = rearrange(q, 'b c h w -> b (h w) c')
         k = rearrange(k, 'b c h w -> b c (h w)')
         w_ = torch.einsum('bij,bjk->bik', q, k)
@@ -170,13 +171,15 @@ class CrossAttention(nn.Module):
         v = self.to_v(context)
         del context, x
 
-        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> (b h) n d', h=h), (q, k, v))
+        q, k, v = map(lambda t: rearrange(
+            t, 'b n (h d) -> (b h) n d', h=h), (q, k, v))
 
         r1 = torch.zeros(q.shape[0], q.shape[1], v.shape[2], device=q.device)
-        for i in range(0, q.shape[0], 4):
-            end = i + 4
+        for i in range(0, q.shape[0], 2):
+            end = i + 2
 
-            s1 = einsum('b i d, b j d -> b i j', q[i:end], k[i:end]) * self.scale
+            s1 = einsum('b i d, b j d -> b i j',
+                        q[i:end], k[i:end]) * self.scale
 
             s2 = s1.softmax(dim=-1)
             del s1
@@ -186,8 +189,10 @@ class CrossAttention(nn.Module):
 
         r2 = rearrange(r1, '(b h) n d -> b n (h d)', h=h)
         del r1
+        del q, k, v
 
         return self.to_out(r2)
+
 
 class MemoryEfficientCrossAttention(nn.Module):
     # https://github.com/MatthieuTPHR/diffusers/blob/d80b531ff8060ec1ea982b65a1b8df70f73aa67c/src/diffusers/models/attention.py#L223
@@ -205,7 +210,8 @@ class MemoryEfficientCrossAttention(nn.Module):
         self.to_k = nn.Linear(context_dim, inner_dim, bias=False)
         self.to_v = nn.Linear(context_dim, inner_dim, bias=False)
 
-        self.to_out = nn.Sequential(nn.Linear(inner_dim, query_dim), nn.Dropout(dropout))
+        self.to_out = nn.Sequential(
+            nn.Linear(inner_dim, query_dim), nn.Dropout(dropout))
         self.attention_op: Optional[Any] = None
 
     def forward(self, x, context=None, mask=None):
@@ -225,7 +231,8 @@ class MemoryEfficientCrossAttention(nn.Module):
         )
 
         # actually compute the attention, what we cannot get enough of
-        out = xformers.ops.memory_efficient_attention(q, k, v, attn_bias=None, op=self.attention_op)
+        out = xformers.ops.memory_efficient_attention(
+            q, k, v, attn_bias=None, op=self.attention_op)
 
         if exists(mask):
             raise NotImplementedError
@@ -243,6 +250,7 @@ class BasicTransformerBlock(nn.Module):
         "softmax": CrossAttention,  # vanilla attention
         "softmax-xformers": MemoryEfficientCrossAttention
     }
+
     def __init__(self, dim, n_heads, d_head, dropout=0., context_dim=None, gated_ff=True, checkpoint=True,
                  disable_self_attn=False):
         super().__init__()
@@ -264,7 +272,8 @@ class BasicTransformerBlock(nn.Module):
         return checkpoint(self._forward, (x, context), self.parameters(), self.checkpoint)
 
     def _forward(self, x, context=None):
-        x = self.attn1(self.norm1(x), context=context if self.disable_self_attn else None) + x
+        x = self.attn1(self.norm1(
+            x), context=context if self.disable_self_attn else None) + x
         x = self.attn2(self.norm2(x), context=context) + x
         x = self.ff(self.norm3(x)) + x
         return x
@@ -279,6 +288,7 @@ class SpatialTransformer(nn.Module):
     Finally, reshape to image
     NEW: use_linear for more efficiency instead of the 1x1 convs
     """
+
     def __init__(self, in_channels, n_heads, d_head,
                  depth=1, dropout=0., context_dim=None,
                  disable_self_attn=False, use_linear=False,
@@ -333,4 +343,3 @@ class SpatialTransformer(nn.Module):
         if not self.use_linear:
             x = self.proj_out(x)
         return x + x_in
-
