@@ -38,5 +38,10 @@ conda activate ldm
 - Run the project with
 
 ```bash
-uvicorn app:app
+python main.py
+```
+or
+
+```bash
+uvicorn main:app --reload
 ```
