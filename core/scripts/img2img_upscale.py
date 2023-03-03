@@ -88,9 +88,8 @@ def load_img_from_url(url):
     image = Image.open(io.BytesIO(response.content)).convert("RGB")
     w, h = image.size
     print(f"loaded input image of size ({w}, {h}) from {url}")
-    # resize to integer multiple of 64
-    w, h = map(lambda x: x * 2 - x % 64, (w, h))
-#    w, h = map(lambda x: 832 if x > 832 else x, (w, h)) # limit size to 832 to avoid memory issues
+    w, h = map(lambda x: int(x*1.5) - int(x*1.5)  % 64, (w, h))  # resize to integer multiple of 64
+#    w, h = map(lambda x: 832 if x > 832 else x, (w, h)) # limit size to 832 to avoid memory issues   # resize to integer multiple of 64
     image = image.resize((w, h), resample=PIL.Image.Resampling.LANCZOS)
     image = np.array(image).astype(np.float32) / 255.0
     image = image[None].transpose(0, 3, 1, 2)
