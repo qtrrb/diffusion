@@ -17,6 +17,7 @@ from core.ldm.util import instantiate_from_config
 from core.ldm.models.diffusion.ddim import DDIMSampler
 from core.ldm.models.diffusion.plms import PLMSSampler
 from core.ldm.models.diffusion.dpm_solver import DPMSolverSampler
+from core.ldm.modules.lora import apply_lora, unload_lora
 
 from safetensors.torch import load_file
 
@@ -134,6 +135,7 @@ def generate(
         precision_scope("cuda"), \
         model.ema_scope():
 
+            apply_lora(model)
             uc = model.get_learned_conditioning([negative_prompt])
             c = model.get_learned_conditioning([prompt])
             shape = [C, H // f, W // f]
@@ -156,6 +158,7 @@ def generate(
             img.save(img_byte_arr, format='png')
             img_byte_arr = img_byte_arr.getvalue()
 
+    unload_lora()
     print("Done!")
 
     return img_byte_arr

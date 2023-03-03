@@ -22,6 +22,7 @@ from safetensors.torch import load_file
 from core.scripts.txt2img import put_watermark
 from core.ldm.util import instantiate_from_config
 from core.ldm.models.diffusion.ddim import DDIMSampler
+from core.ldm.modules.lora import apply_lora, unload_lora
 
 def chunk(it, size):
     it = iter(it)
@@ -93,7 +94,7 @@ def generate_from_image(
     prompt="",
     negative_prompt="",
     init_img_url="",
-    steps=50,
+    steps=30,
     seed="random",
     ckpt="sdv1/1-5.safetensors",
     vae="",
@@ -144,25 +145,26 @@ def generate_from_image(
         precision_scope("cuda"), \
         model.ema_scope():
 
-                uc = model.get_learned_conditioning([negative_prompt])
-                c = model.get_learned_conditioning([prompt])
+            apply_lora()
+            uc = model.get_learned_conditioning([negative_prompt])
+            c = model.get_learned_conditioning([prompt])
 
-                # encode (scaled latent)
-                z_enc = sampler.stochastic_encode(init_latent, torch.tensor([t_enc]).to(device))
-                # decode it
-                samples = sampler.decode(z_enc, c, t_enc, unconditional_guidance_scale=scale,
-                                                 unconditional_conditioning=uc, )
+            # encode (scaled latent)
+            z_enc = sampler.stochastic_encode(init_latent, torch.tensor([t_enc]).to(device))
+            # decode it
+            samples = sampler.decode(z_enc, c, t_enc, unconditional_guidance_scale=scale,
+                                                unconditional_conditioning=uc, )
 
-                x_sample = model.decode_first_stage(samples)
-                x_sample = torch.clamp((x_sample + 1.0) / 2.0, min=0.0, max=1.0)
+            x_sample = model.decode_first_stage(samples)
+            x_sample = torch.clamp((x_sample + 1.0) / 2.0, min=0.0, max=1.0)
 
-                x_sample = 255. * rearrange(x_sample.cpu().numpy(), '1 c h w -> h w c')
-                img = Image.fromarray(x_sample.astype(np.uint8))
-                img_byte_arr = io.BytesIO()
-                img.save(img_byte_arr, format='png')
-                img_byte_arr = img_byte_arr.getvalue()
+            x_sample = 255. * rearrange(x_sample.cpu().numpy(), '1 c h w -> h w c')
+            img = Image.fromarray(x_sample.astype(np.uint8))
+            img_byte_arr = io.BytesIO()
+            img.save(img_byte_arr, format='png')
+            img_byte_arr = img_byte_arr.getvalue()
 
-
+    unload_lora()
     print("Done!")
 
     return img_byte_arr

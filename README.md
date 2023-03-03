@@ -13,6 +13,7 @@ A fork of [stable diffusion](https://github.com/Stability-AI/stablediffusion) th
 - [ ] Upscaling
 - [ ] Code refactoring
 - [ ] ...
+- [x] ~~LoRA support~~
 - [x] ~~Image to Image API~~
 - [x] ~~VAE loading~~
 - [x] ~~Safetensors Support~~
