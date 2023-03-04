@@ -10,8 +10,8 @@ re_unet_down_blocks = re.compile(r"lora_unet_down_blocks_(\d+)_attentions_(\d+)_
 re_unet_mid_blocks = re.compile(r"lora_unet_mid_block_attentions_0_(.+)")
 re_unet_up_blocks = re.compile(r"lora_unet_up_blocks_(\d+)_attentions_(\d+)_(.+)")
 
-loaded_lora = None
-toload_lora = None
+loaded_lora = [] 
+toload_lora = [] 
 
 # values from https://github.com/cloneofsimo/lora/blob/master/lora_diffusion/to_ckpt_v2.py
 # and  convert code loosely based on https://github.com/jordanramstad/InvokeAI/blob/add_lora_support/ldm/modules/legacy_lora_manager.py
@@ -125,18 +125,19 @@ class LoRA:
             else:
                 print(f">> Encountered unknown layer in: {leaf}")
                 return
-        loaded_lora = self
+        loaded_lora.append(self)
 
     def __call__(self):
         global toload_lora
-        toload_lora = self
+        toload_lora.append(self)
 
 def apply_lora(sd_model):
     global toload_lora
-    if toload_lora is not None:
-        toload_lora.load_lora(sd_model)
-        toload_lora = None
-    if loaded_lora is not None:
+    if toload_lora is not []:
+        for lora in toload_lora:
+            lora.load_lora(sd_model)
+    toload_lora = []
+    if loaded_lora is not []:
         if not hasattr(torch.nn.Linear, 'old_forward'):
             torch.nn.Linear.old_forward = torch.nn.Linear.forward
         if not hasattr(torch.nn.Conv2d, 'old_forward'):
@@ -147,13 +148,14 @@ def apply_lora(sd_model):
 def unload_lora():
     global toload_lora
     global loaded_lora
-    toload_lora = None 
-    loaded_lora = None
+    toload_lora = []
+    loaded_lora = []
 
 def lora_forward(module, input, output):
-    layer = loaded_lora.modules.get(getattr(module, 'lora_layer_name', None), None)
-    if layer is not None:
-        output = output + layer.up(layer.down(input)) * loaded_lora.multiplier * (layer.alpha / layer.rank)
+    for lora in loaded_lora:
+        layer = lora.modules.get(getattr(module, 'lora_layer_name', None), None)
+        if layer is not None:
+            output = output + layer.up(layer.down(input)) * lora.multiplier * (layer.alpha / layer.rank)
 
     return output 
 
