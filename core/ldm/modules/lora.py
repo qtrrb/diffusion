@@ -155,7 +155,12 @@ def lora_forward(module, input, output):
     for lora in loaded_lora:
         layer = lora.modules.get(getattr(module, 'lora_layer_name', None), None)
         if layer is not None:
-            output = output + layer.up(layer.down(input)) * lora.multiplier * (layer.alpha / layer.rank)
+# It seems like for some LoRAs, alpha is None
+            if layer.alpha is not None:
+                output = output + layer.up(layer.down(input)) * lora.multiplier * (layer.alpha / layer.rank)
+            else: 
+                output = output + layer.up(layer.down(input)) * lora.multiplier
+                
 
     return output 
 
