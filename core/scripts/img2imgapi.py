@@ -145,7 +145,7 @@ def generate_from_image(
         precision_scope("cuda"), \
         model.ema_scope():
 
-            apply_lora()
+            apply_lora(model)
             uc = model.get_learned_conditioning([negative_prompt])
             c = model.get_learned_conditioning([prompt])
 
