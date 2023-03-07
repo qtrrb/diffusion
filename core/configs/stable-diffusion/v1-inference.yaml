@@ -68,3 +68,5 @@ model:
 
     cond_stage_config:
       target: core.ldm.modules.encoders.modules.FrozenCLIPEmbedder
+      params:
+        layer_skip: 1 

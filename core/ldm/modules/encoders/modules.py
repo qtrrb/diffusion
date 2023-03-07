@@ -93,13 +93,14 @@ class FrozenCLIPEmbedder(AbstractEncoder):
         "hidden"
     ]
     def __init__(self, version="openai/clip-vit-large-patch14", device="cuda", max_length=77,
-                 freeze=True, layer="last", layer_idx=None):  # clip-vit-base-patch32
+                 freeze=True, layer="last", layer_idx=None, layer_skip= 1):  # clip-vit-base-patch32
         super().__init__()
         assert layer in self.LAYERS
         self.tokenizer = CLIPTokenizer.from_pretrained(version)
         self.transformer = CLIPTextModel.from_pretrained(version)
         self.device = device
         self.max_length = max_length
+        self.layer_skip = layer_skip
         if freeze:
             self.freeze()
         self.layer = layer
@@ -118,13 +119,11 @@ class FrozenCLIPEmbedder(AbstractEncoder):
         batch_encoding = self.tokenizer(text, truncation=True, max_length=self.max_length, return_length=True,
                                         return_overflowing_tokens=False, padding="max_length", return_tensors="pt")
         tokens = batch_encoding["input_ids"].to(self.device)
-        outputs = self.transformer(input_ids=tokens, output_hidden_states=self.layer=="hidden")
-        if self.layer == "last":
-            z = outputs.last_hidden_state
-        elif self.layer == "pooled":
-            z = outputs.pooler_output[:, None, :]
+        outputs = self.transformer(input_ids=tokens, output_hidden_states=(self.layer_skip > 1))
+        if self.layer_skip > 1:
+            z = self.transformer.text_model.final_layer_norm(outputs.hidden_states[- self.layer_skip])
         else:
-            z = outputs.hidden_states[self.layer_idx]
+            z = outputs.last_hidden_state
         return z
 
     def encode(self, text):
