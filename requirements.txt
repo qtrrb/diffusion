@@ -1,20 +1,17 @@
-albumentations==0.4.3
-opencv-python
-pudb==2019.2
-imageio==2.9.0
-imageio-ffmpeg==0.4.2
-pytorch-lightning>=1.6.0
-torchmetrics==0.6
+numpy>=1.23.1
+torch>=1.12.1 --extra-index-url https://download.pytorch.org/whl/cu117 ; sys_platform == 'win32'
+torch>=1.12.1; sys_platform != 'win32'
+torchvision>=0.13.1
+safetensors>=0.3.0
+pytorch-lightning==1.7.7
 omegaconf==2.1.1
-test-tube>=0.7.5
-streamlit>=0.73.1
-einops==0.3.0
+einops>=0.3.0
 transformers==4.19.2
-webdataset==0.2.5
-open-clip-torch==2.7.0
-gradio>=3.13.1
-kornia==0.6
+open-clip-torch>=2.7.0
+kornia>=0.6
 invisible-watermark>=0.1.5
-streamlit-drawable-canvas==0.8.0
 k-diffusion>=0.0.14
+fastapi>=0.89.1
+uvicorn>=0.20.0
+
 -e .
