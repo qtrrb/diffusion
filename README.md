@@ -28,11 +28,18 @@ A fork of [stable diffusion](https://github.com/Stability-AI/stablediffusion) th
 git clone https://github.com/qtrrb/stablediffusion-api
 ```
 
+- Initialize a new virtual environment
+
+```bash
+python -m venv .env
+```
+
+- Activate the virtual environment
+
 - Install necessary dependencies
 
 ```bash
-conda env create -f environment.yaml
-conda activate ldm
+pip install -r requirements.txt
 ```
 
 - Run the project with
@@ -40,6 +47,7 @@ conda activate ldm
 ```bash
 python main.py
 ```
+
 or
 
 ```bash
