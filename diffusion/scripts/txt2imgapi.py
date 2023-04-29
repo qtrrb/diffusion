@@ -93,9 +93,9 @@ def generate(
     f=8,  # downsampling factor
 ):
     if "sdv1" in ckpt:
-        config_file = "diffusion/configs/stable-diffusion/v1-inference.yaml"
+        config_file = "diffusion/configs/v1-inference.yaml"
     else:
-        config_file = "diffusion/configs/stable-diffusion/v2-inference.yaml"
+        config_file = "diffusion/configs/v2-inference.yaml"
 
     ckpt = "models/" + ckpt
 

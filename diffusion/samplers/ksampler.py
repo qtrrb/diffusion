@@ -1,7 +1,6 @@
 import k_diffusion as K
 import torch.nn as nn
 import torch
-import warnings
 
 
 # based on Katherine Crowson's Text to Image (CC12M Diffusion)
@@ -36,9 +35,6 @@ class KSampler:
         eta,
         x_T,
     ):
-        # interval throws a warning that values are bigger than sigma min and max
-        # this doesn't seem to pose any issues, so we filter warnings
-        warnings.filterwarnings("ignore", category=UserWarning)
         model_wrap = K.external.CompVisDenoiser(self.model)
         sigma_min, sigma_max = model_wrap.sigmas[0].item(), model_wrap.sigmas[-1].item()
         sigmas = K.sampling.get_sigmas_karras(S, sigma_min, sigma_max, device="cuda")

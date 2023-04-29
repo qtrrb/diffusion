@@ -103,9 +103,9 @@ def generate_from_image(
     ddim_eta=0.0,
 ):
     if "sdv1" in ckpt:
-        config_file = "stablediffusion_api/configs/stable-diffusion/v1-inference.yaml"
+        config_file = "stablediffusion_api/configs/v1-inference.yaml"
     else:
-        config_file = "stablediffusion_api/configs/stable-diffusion/v2-inference.yaml"
+        config_file = "stablediffusion_api/configs/v2-inference.yaml"
 
     ckpt = "core/ldm/models/" + ckpt
 
