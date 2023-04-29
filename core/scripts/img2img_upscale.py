@@ -4,8 +4,6 @@ TODO: Every file should be rewritten as a class and return an image so this coul
 img2img or txt2img process
 """
 
-import argparse
-import os
 import io
 import random
 import requests
@@ -14,17 +12,13 @@ import torch
 import numpy as np
 from omegaconf import OmegaConf
 from PIL import Image
-from tqdm import tqdm, trange
 from itertools import islice
-from einops import rearrange, repeat
-from torchvision.utils import make_grid
+from einops import rearrange
 from torch import autocast
 from contextlib import nullcontext
 from pytorch_lightning import seed_everything
-from imwatermark import WatermarkEncoder
 from safetensors.torch import load_file
 
-from core.scripts.txt2img import put_watermark
 from core.ldm.util import instantiate_from_config
 from core.ldm.models.diffusion.ddim import DDIMSampler
 
@@ -65,7 +59,7 @@ def load_model_from_config(config, ckpt, vae, verbose=False):
     if vae:
         vae = "core/ldm/models/" + vae
         vae_sd = torch.load(vae, map_location="cpu")["state_dict"]
-        model.first_stage_model.load_state_dict(vae_sd,  strict=False)
+        model.first_stage_model.load_state_dict(vae_sd, strict=False)
 
     return model
 
@@ -80,7 +74,7 @@ def load_img(path):
     image = np.array(image).astype(np.float32) / 255.0
     image = image[None].transpose(0, 3, 1, 2)
     image = torch.from_numpy(image)
-    return 2. * image - 1.
+    return 2.0 * image - 1.0
 
 
 def load_img_from_url(url):
@@ -88,13 +82,15 @@ def load_img_from_url(url):
     image = Image.open(io.BytesIO(response.content)).convert("RGB")
     w, h = image.size
     print(f"loaded input image of size ({w}, {h}) from {url}")
-    w, h = map(lambda x: int(x*1.5) - int(x*1.5)  % 64, (w, h))  # resize to integer multiple of 64
-#    w, h = map(lambda x: 832 if x > 832 else x, (w, h)) # limit size to 832 to avoid memory issues   # resize to integer multiple of 64
+    w, h = map(
+        lambda x: int(x * 1.5) - int(x * 1.5) % 64, (w, h)
+    )  # resize to integer multiple of 64
+    #    w, h = map(lambda x: 832 if x > 832 else x, (w, h)) # limit size to 832 to avoid memory issues   # resize to integer multiple of 64
     image = image.resize((w, h), resample=PIL.Image.Resampling.LANCZOS)
     image = np.array(image).astype(np.float32) / 255.0
     image = image[None].transpose(0, 3, 1, 2)
     image = torch.from_numpy(image)
-    return 2. * image - 1.
+    return 2.0 * image - 1.0
 
 
 def generate_from_image(
@@ -124,54 +120,54 @@ def generate_from_image(
     config = OmegaConf.load(f"{config_file}")
     model = load_model_from_config(config, f"{ckpt}", f"{vae}")
 
-    device = torch.device(
-        "cuda") if torch.cuda.is_available() else torch.device("cpu")
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     model = model.to(device)
 
     sampler = DDIMSampler(model)
 
-#    print("Creating invisible watermark encoder (see https://github.com/ShieldMnt/invisible-watermark)...")
-#    wm = "SDV2"
-#    wm_encoder = WatermarkEncoder()
-#    wm_encoder.set_watermark('bytes', wm.encode('utf-8'))
+    #    print("Creating invisible watermark encoder (see https://github.com/ShieldMnt/invisible-watermark)...")
+    #    wm = "SDV2"
+    #    wm_encoder = WatermarkEncoder()
+    #    wm_encoder.set_watermark('bytes', wm.encode('utf-8'))
 
     assert prompt is not None
 
     init_image = load_img_from_url(init_img_url).to(device)
     init_latent = model.get_first_stage_encoding(
-        model.encode_first_stage(init_image))  # move to latent space
+        model.encode_first_stage(init_image)
+    )  # move to latent space
 
-    sampler.make_schedule(ddim_num_steps=steps,
-                          ddim_eta=ddim_eta, verbose=False)
+    sampler.make_schedule(ddim_num_steps=steps, ddim_eta=ddim_eta, verbose=False)
 
-    assert 0. <= strength <= 1., 'can only work with strength in [0.0, 1.0]'
+    assert 0.0 <= strength <= 1.0, "can only work with strength in [0.0, 1.0]"
     t_enc = int(strength * steps)
     print(f"target t_enc is {t_enc} steps")
 
     negative_prompt += "nsfw, lowres, bad anatomy, bad hands, text, missing finger, extra digits, fewer digits, blurry, mutated hands and fingers, poorly drawn face, mutation, deformed face, ugly, bad proportions, extra limbs, extra face, double head, extra head, extra feet, monster, logo, cropped, worst quality, low quality, normal quality, jpeg, humpbacked, long body, long neck, jpeg artifacts"
 
     precision_scope = autocast if precision == "autocast" else nullcontext
-    with torch.no_grad(), \
-            precision_scope("cuda"), \
-            model.ema_scope():
-
+    with torch.no_grad(), precision_scope("cuda"), model.ema_scope():
         uc = model.get_learned_conditioning([negative_prompt])
         c = model.get_learned_conditioning([prompt])
 
         # encode (scaled latent)
-        z_enc = sampler.stochastic_encode(
-            init_latent, torch.tensor([t_enc]).to(device))
+        z_enc = sampler.stochastic_encode(init_latent, torch.tensor([t_enc]).to(device))
         # decode it
-        samples = sampler.decode(z_enc, c, t_enc, unconditional_guidance_scale=scale,
-                                 unconditional_conditioning=uc, )
+        samples = sampler.decode(
+            z_enc,
+            c,
+            t_enc,
+            unconditional_guidance_scale=scale,
+            unconditional_conditioning=uc,
+        )
 
         x_sample = model.decode_first_stage(samples)
         x_sample = torch.clamp((x_sample + 1.0) / 2.0, min=0.0, max=1.0)
 
-        x_sample = 255. * rearrange(x_sample.cpu().numpy(), '1 c h w -> h w c')
+        x_sample = 255.0 * rearrange(x_sample.cpu().numpy(), "1 c h w -> h w c")
         img = Image.fromarray(x_sample.astype(np.uint8))
         img_byte_arr = io.BytesIO()
-        img.save(img_byte_arr, format='png')
+        img.save(img_byte_arr, format="png")
         img_byte_arr = img_byte_arr.getvalue()
 
     print("Done!")
