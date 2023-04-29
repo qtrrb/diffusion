@@ -2,7 +2,7 @@
 
 A fork of [stable diffusion](https://github.com/Stability-AI/stablediffusion) that adds an API and optimizations/features
 
-![hero](media/banner.png)
+![hero](.github/assets/banner.png)
 
 ## Roadmap
 
