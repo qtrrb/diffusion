@@ -11,6 +11,7 @@ from torch import autocast
 
 from ..samplers.ddim import DDIMSampler
 from .diffusion_pipeline import DiffusionPipeline
+from ..modules.lora import Lora, LoRAManager
 
 
 class DiffusionUpscalingPipeline(DiffusionPipeline):
@@ -46,6 +47,7 @@ class DiffusionUpscalingPipeline(DiffusionPipeline):
         strength=0.7,
         ddim_eta=0.0,
         layer_skip=1,
+        loras: list[Lora] = [],
     ):
         assert prompt is not None
         assert init_image is not None
@@ -70,6 +72,9 @@ class DiffusionUpscalingPipeline(DiffusionPipeline):
         assert 0.0 <= strength <= 1.0, "can only work with strength in [0.0, 1.0]"
         t_enc = int(strength * steps)
         print(f"target t_enc is {t_enc} steps")
+
+        lora_manager = LoRAManager(loras)
+        lora_manager.load_loras(self.model)
 
         precision_scope = autocast
 
@@ -96,6 +101,7 @@ class DiffusionUpscalingPipeline(DiffusionPipeline):
             x_sample = 255.0 * rearrange(x_sample.cpu().numpy(), "1 c h w -> h w c")
             img = Image.fromarray(x_sample.astype(np.uint8))
 
+        lora_manager.clear_loras()
         print("Done!")
 
         return img
@@ -112,6 +118,7 @@ class DiffusionUpscalingPipeline(DiffusionPipeline):
         strength=0.7,
         ddim_eta=0.0,
         layer_skip=1,
+        loras: list[Lora] = [],
     ):
         return self.generate(
             prompt,
@@ -124,4 +131,5 @@ class DiffusionUpscalingPipeline(DiffusionPipeline):
             strength,
             ddim_eta,
             layer_skip,
+            loras,
         )

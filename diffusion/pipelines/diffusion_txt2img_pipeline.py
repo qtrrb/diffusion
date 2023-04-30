@@ -10,6 +10,7 @@ from torch import autocast
 
 from ..samplers.ddim import DDIMSampler
 from .diffusion_pipeline import DiffusionPipeline
+from ..modules.lora import Lora, LoRAManager
 
 
 class DiffusionTxt2ImgPipeline(DiffusionPipeline):
@@ -33,6 +34,7 @@ class DiffusionTxt2ImgPipeline(DiffusionPipeline):
         H=512,
         W=512,
         layer_skip=1,
+        loras: list[Lora] = [],
     ):
         assert prompt is not None
 
@@ -51,6 +53,9 @@ class DiffusionTxt2ImgPipeline(DiffusionPipeline):
 
         if self.version == "v1":
             self.model.cond_stage_model.layer_skip = layer_skip
+
+        lora_manager = LoRAManager(loras)
+        lora_manager.load_loras(self.model)
 
         precision_scope = autocast
 
@@ -76,6 +81,7 @@ class DiffusionTxt2ImgPipeline(DiffusionPipeline):
             x_sample = 255.0 * rearrange(x_sample.cpu().numpy(), "1 c h w -> h w c")
             img = Image.fromarray(x_sample.astype(np.uint8))
 
+        lora_manager.clear_loras()
         print("Done!")
 
         return img
@@ -92,6 +98,7 @@ class DiffusionTxt2ImgPipeline(DiffusionPipeline):
         H=512,
         W=512,
         layer_skip=1,
+        loras: list[Lora] = [],
     ):
         return self.generate(
             prompt,
@@ -104,4 +111,5 @@ class DiffusionTxt2ImgPipeline(DiffusionPipeline):
             H,
             W,
             layer_skip,
+            loras,
         )
