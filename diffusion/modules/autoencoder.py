@@ -1,5 +1,4 @@
 import torch
-import pytorch_lightning as pl
 import torch.nn.functional as F
 from contextlib import contextmanager
 
@@ -10,7 +9,7 @@ from ..utils.util import instantiate_from_config
 from .ema import LitEma
 
 
-class AutoencoderKL(pl.LightningModule):
+class AutoencoderKL(torch.nn.Module):
     def __init__(
         self,
         ddconfig,
