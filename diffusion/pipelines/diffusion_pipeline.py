@@ -56,7 +56,10 @@ class DiffusionPipeline(ABC):
 
         # this is done after model.half() to avoid  converting VAE weights to float16
         if self.vae_path != "":
-            vae_sd = torch.load(self.vae_path, map_location="cpu")["state_dict"]
+            if self.vae_path.endswith(".safetensors"):
+                vae_sd = load_file(self.vae_path, device="cpu")
+            else:
+                vae_sd = torch.load(self.vae_path, map_location="cpu")["state_dict"]
             model.first_stage_model.load_state_dict(vae_sd, strict=False)
 
         assert torch.cuda.is_available(), "CUDA unavailable"

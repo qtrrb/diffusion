@@ -1,4 +1,5 @@
 import os
+import safetensors
 import torch
 from pathlib import Path
 
@@ -9,12 +10,17 @@ class Embedding:
         self.token, self.vecs = self.load_textual_inversion_embedding()
 
     def load_textual_inversion_embedding(self):
-        state_dict = torch.load(self.file_path, map_location="cpu")
+        if self.file_path.endswith(".safetensors"):
+            state_dict = safetensors.torch.load_file(self.file_path, device="cpu")
+        else:
+            state_dict = torch.load(self.file_path, map_location="cpu")
         if "string_to_param" in state_dict:
             vecs = state_dict["string_to_param"]["*"]
         else:
             vecs = state_dict["emb_params"]
         token = Path(self.file_path).stem
+
+        print(f"Using textual inversion embedding with token {token}")
 
         return token, vecs
 
@@ -38,6 +44,7 @@ class TextualInversionManager:
 
     def replace_token_in_prompt(self, prompt: str):
         if self.embedding.token in prompt:
+            print(f"{self.embedding.token} in prompt, using embedding...")
             token_index = prompt.index(self.embedding.token)
             token_replacement = " ".join(
                 [
