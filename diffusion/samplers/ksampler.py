@@ -29,11 +29,9 @@ class KSampler:
         conditioning,
         batch_size,
         shape,
-        verbose,
         unconditional_guidance_scale,
         unconditional_conditioning,
-        eta,
-        x_T,
+        **kwargs
     ):
         model_wrap = K.external.CompVisDenoiser(self.model)
         sigma_min, sigma_max = model_wrap.sigmas[0].item(), model_wrap.sigmas[-1].item()

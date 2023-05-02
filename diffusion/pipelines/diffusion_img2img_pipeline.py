@@ -12,6 +12,7 @@ from torch import autocast
 from ..samplers.ddim import DDIMSampler
 from .diffusion_pipeline import DiffusionPipeline
 from ..modules.lora import Lora, LoRAManager
+from ..modules.textual_inversion import Embedding, TextualInversionManager
 
 
 class DiffusionImg2ImgPipeline(DiffusionPipeline):
@@ -46,6 +47,7 @@ class DiffusionImg2ImgPipeline(DiffusionPipeline):
         ddim_eta=0.0,
         layer_skip=1,
         loras: list[Lora] = [],
+        embedding: Embedding | None = None,
     ):
         assert prompt is not None
         assert init_image is not None
@@ -73,6 +75,14 @@ class DiffusionImg2ImgPipeline(DiffusionPipeline):
 
         lora_manager = LoRAManager(loras)
         lora_manager.load_loras(self.model)
+
+        if embedding is not None:
+            textual_inversion_manager = TextualInversionManager(self.model, embedding)
+            textual_inversion_manager.apply_textual_inversion_embeddings()
+            prompt = textual_inversion_manager.replace_token_in_prompt(prompt)
+            negative_prompt = textual_inversion_manager.replace_token_in_prompt(
+                negative_prompt
+            )
 
         precision_scope = autocast
 
@@ -116,6 +126,7 @@ class DiffusionImg2ImgPipeline(DiffusionPipeline):
         ddim_eta=0.0,
         layer_skip=1,
         loras: list[Lora] = [],
+        embedding: Embedding | None = None,
     ):
         return self.generate(
             prompt,
@@ -128,4 +139,5 @@ class DiffusionImg2ImgPipeline(DiffusionPipeline):
             ddim_eta,
             layer_skip,
             loras,
+            embedding,
         )
