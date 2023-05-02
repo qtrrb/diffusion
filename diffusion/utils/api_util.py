@@ -6,6 +6,7 @@ from ..api.schemas import TextArgs, ImageArgs
 from .constants import MODELS_PATH, VAES_PATH, LORAS_PATH, EMBEDDINGS_PATH
 from ..pipelines.diffusion_txt2img_pipeline import DiffusionTxt2ImgPipeline
 from ..pipelines.diffusion_img2img_pipeline import DiffusionImg2ImgPipeline
+from ..pipelines.diffusion_upscaling_pipeline import DiffusionUpscalingPipeline
 from ..samplers.ddim import DDIMSampler
 from ..samplers.dpm_solver import DPMSolverSampler
 from ..samplers.plms import PLMSSampler
@@ -79,6 +80,20 @@ def generate_txt2img(args: TextArgs) -> bytes:
         embedding=embedding,
     )
 
+    if args.upscale > 1:
+        upscale_pipeline = DiffusionUpscalingPipeline(model, vae)
+        image = upscale_pipeline(
+            prompt=prompt,
+            negative_prompt=negative_prompt,
+            init_image=image,
+            upscale=args.upscale,
+            scale=scale,
+            ddim_eta=ddim_eta,
+            layer_skip=layer_skip,
+            loras=loras,
+            embedding=embedding,
+        )
+
     img_bytes = convert_img_to_byte_array(image)
 
     return img_bytes
@@ -100,25 +115,41 @@ def generate_img2img(args: ImageArgs) -> bytes:
     )
     prompt = args.prompt
     negative_prompt = args.negative_prompt
-    image = convert_url_to_img(args.image)
+    init_image = convert_url_to_img(args.image)
     steps = args.steps
     seed = args.seed
     scale = args.scale
+    strength = args.strength
     ddim_eta = args.ddim_eta
     layer_skip = args.layer_skip
 
     image = pipeline(
         prompt=prompt,
         negative_prompt=negative_prompt,
-        init_image=image,
+        init_image=init_image,
         steps=steps,
         seed=seed,
         scale=scale,
+        strength=strength,
         ddim_eta=ddim_eta,
         layer_skip=layer_skip,
         loras=loras,
         embedding=embedding,
     )
+
+    if args.upscale > 1:
+        upscale_pipeline = DiffusionUpscalingPipeline(model, vae)
+        image = upscale_pipeline(
+            prompt=prompt,
+            negative_prompt=negative_prompt,
+            init_image=image,
+            upscale=args.upscale,
+            scale=scale,
+            ddim_eta=ddim_eta,
+            layer_skip=layer_skip,
+            loras=loras,
+            embedding=embedding,
+        )
 
     img_bytes = convert_img_to_byte_array(image)
 

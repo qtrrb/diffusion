@@ -16,6 +16,7 @@ class TextArgs(BaseModel):
     layer_skip: int = 1
     loras: list[str] = []
     embedding: str = ""
+    upscale: float = 1
 
 
 class ImageArgs(BaseModel):
@@ -27,7 +28,9 @@ class ImageArgs(BaseModel):
     steps: int = 30
     seed: int = -1
     scale: int = 7
+    strength: float = 0.7
     ddim_eta: float = 0.0
     layer_skip: int = 1
     loras: list[str] = []
     embedding: str = ""
+    upscale: float = 1
