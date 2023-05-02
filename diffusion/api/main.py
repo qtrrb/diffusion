@@ -1,50 +1,59 @@
 import torch
-from ..scripts.txt2imgapi import generate
-from ..scripts.img2imgapi import generate_from_image
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException
 from fastapi.responses import Response
+from fastapi.middleware.cors import CORSMiddleware
 from .schemas import TextArgs, ImageArgs
+from ..utils.api_util import generate_txt2img, generate_img2img
+from transformers import logging
 
-app = FastAPI()
+logging.set_verbosity_error()
+
+app = FastAPI(title="diffusion api")
+router = APIRouter(prefix="/v1/images")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
-@app.get("/")
+@router.get("/")
 def read_root():
-    return {"Status": "API running"}
+    return {"status": "API running"}
 
 
-@app.post(
-    "/txt2img", response_class=Response, responses={200: {"content": {"image/png": {}}}}
+@router.post(
+    "/generate",
+    response_class=Response,
+    responses={200: {"content": {"image/png": {}}}},
 )
 def txt2img(args: TextArgs):
-    image_bytes: bytes = generate(
-        prompt=args.prompt,
-        negative_prompt=args.negative_prompt,
-        W=args.width,
-        H=args.height,
-        ckpt=args.model,
-        vae=args.vae,
-    )
-    torch.cuda.empty_cache()
-    # Return the image in the response
-    return Response(content=image_bytes, media_type="image/png")
-
-
-@app.post(
-    "/img2img", response_class=Response, responses={200: {"content": {"image/png": {}}}}
-)
-def img2img(args: ImageArgs):
     try:
-        image_bytes: bytes = generate_from_image(
-            prompt=args.prompt,
-            negative_prompt=args.negative_prompt,
-            init_img_url=args.image,
-            ckpt=args.model,
-            vae=args.vae,
-        )
+        image_bytes: bytes = generate_txt2img(args=args)
         torch.cuda.empty_cache()
         # Return the image in the response
         return Response(content=image_bytes, media_type="image/png")
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500, detail="Error generating image")
+
+
+@router.post(
+    "/vary",
+    response_class=Response,
+    responses={200: {"content": {"image/png": {}}}},
+)
+def img2img(args: ImageArgs):
+    try:
+        image_bytes: bytes = generate_img2img(args)
+        torch.cuda.empty_cache()
+        # Return the image in the response
+        return Response(content=image_bytes, media_type="image/png")
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail="Error generating image")
+
+
+app.include_router(router)
