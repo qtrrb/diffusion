@@ -20,8 +20,9 @@ class DiffusionUpscalingPipeline(DiffusionPipeline):
         model_path: str | os.PathLike,
         vae_path: str | os.PathLike = "",
         version: typing.Literal["v1", "v2"] = "v1",
+        dtype=torch.float16,
     ):
-        super().__init__(model_path, vae_path, version)
+        super().__init__(model_path, vae_path, version, dtype)
 
     def load_img(self, image: PIL.Image, upscale: float | int):
         w, h = image.size
@@ -55,7 +56,7 @@ class DiffusionUpscalingPipeline(DiffusionPipeline):
         sampler = DDIMSampler(self.model)
 
         if seed == -1:
-            seed = random.randint(0, 999999)
+            seed = random.randint(0, 9999999999)
 
         print(f"Seed set to {seed}")
         torch.manual_seed(seed)

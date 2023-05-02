@@ -14,10 +14,12 @@ class DiffusionPipeline(ABC):
         model_path: str | os.PathLike,
         vae_path: str | os.PathLike = "",
         version: typing.Literal["v1", "v2"] = "v1",
+        dtype=torch.float16,
     ):
         self.model_path = model_path
         self.vae_path = vae_path
         self.version = version
+        self.dtype = dtype
         self.model = self.load_model_and_vae()
 
     def load_model_and_vae(self, verbose=False):
@@ -52,7 +54,7 @@ class DiffusionPipeline(ABC):
 
         model.cuda()
         model.eval()
-        model.half()
+        model.to(self.dtype)
 
         # this is done after model.half() to avoid  converting VAE weights to float16
         if self.vae_path != "":
