@@ -39,7 +39,7 @@ class DiffusionTxt2ImgPipeline(DiffusionPipeline):
         loras: list[Lora] = [],
         embedding: Embedding | None = None,
     ):
-        assert prompt is not None
+        assert prompt != ""
 
         start_code = None
         C = 4  # Latent Channels

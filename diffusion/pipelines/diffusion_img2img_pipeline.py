@@ -49,7 +49,7 @@ class DiffusionImg2ImgPipeline(DiffusionPipeline):
         loras: list[Lora] = [],
         embedding: Embedding | None = None,
     ):
-        assert prompt is not None
+        assert prompt != ""
         assert init_image is not None
 
         sampler = DDIMSampler(self.model)
