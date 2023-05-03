@@ -14,7 +14,7 @@ class TextArgs(BaseModel):
     height: int = 512
     width: int = 512
     layer_skip: int = 1
-    loras: list[str] = []
+    loras: list[tuple[str, float]] = []
     embedding: str = ""
     upscale: float = 1
 
@@ -31,6 +31,6 @@ class ImageArgs(BaseModel):
     strength: float = 0.7
     ddim_eta: float = 0.0
     layer_skip: int = 1
-    loras: list[str] = []
+    loras: list[tuple[str, float]] = []
     embedding: str = ""
     upscale: float = 1

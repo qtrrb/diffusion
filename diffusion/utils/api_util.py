@@ -40,6 +40,14 @@ def get_sampler(sampler_name: str, model):
     return sampler
 
 
+def parse_lora_array(arr: list[tuple[str, float]]) -> list[Lora]:
+    lora_arr = []
+    for file, value in arr:
+        if file != "":
+            lora_arr.append(Lora(os.path.join(LORAS_PATH, file), value))
+    return lora_arr
+
+
 def generate_txt2img(args: TextArgs) -> bytes:
     model = os.path.join(MODELS_PATH, args.model)
     vae = os.path.join(VAES_PATH, args.vae) if args.vae != "" else ""
@@ -50,11 +58,7 @@ def generate_txt2img(args: TextArgs) -> bytes:
         if args.embedding != ""
         else None
     )
-    loras = (
-        [Lora(os.path.join(LORAS_PATH, i)) for i in args.loras]
-        if args.loras != []
-        else []
-    )
+    loras = parse_lora_array(args.loras)
     prompt = args.prompt
     negative_prompt = args.negative_prompt
     steps = args.steps
@@ -108,11 +112,7 @@ def generate_img2img(args: ImageArgs) -> bytes:
         if args.embedding != ""
         else None
     )
-    loras = (
-        [Lora(os.path.join(LORAS_PATH, i)) for i in args.loras]
-        if args.loras != []
-        else []
-    )
+    loras = parse_lora_array(args.loras)
     prompt = args.prompt
     negative_prompt = args.negative_prompt
     init_image = convert_url_to_img(args.image)

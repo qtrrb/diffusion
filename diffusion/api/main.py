@@ -30,11 +30,21 @@ def read_root():
     response_class=Response,
     responses={
         200: {"content": {"image/png": {}}},
-        500: {"description": "Error generating image"},
-        429: {"description": "Model is overloaded"},
+        500: {
+            "description": "Error generating image",
+            "content": {
+                "application/json": {"example": {"detail": "Error generating image"}}
+            },
+        },
+        429: {
+            "description": "Model is overloaded",
+            "content": {
+                "application/json": {"example": {"detail": "Model is overloaded"}}
+            },
+        },
     },
 )
-def txt2img(args: TextArgs):
+def generate_image(args: TextArgs):
     global busy
     if busy:
         raise HTTPException(status_code=429, detail="Model is overloaded")
@@ -57,11 +67,21 @@ def txt2img(args: TextArgs):
     response_class=Response,
     responses={
         200: {"content": {"image/png": {}}},
-        500: {"description": "Error generating image"},
-        429: {"description": "Model is overloaded"},
+        500: {
+            "description": "Error generating image",
+            "content": {
+                "application/json": {"example": {"detail": "Error generating image"}}
+            },
+        },
+        429: {
+            "description": "Model is overloaded",
+            "content": {
+                "application/json": {"example": {"detail": "Model is overloaded"}}
+            },
+        },
     },
 )
-def img2img(args: ImageArgs):
+def vary_image(args: ImageArgs):
     global busy
     if busy:
         raise HTTPException(status_code=429, detail="Model is overloaded")
