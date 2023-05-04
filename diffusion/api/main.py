@@ -1,16 +1,18 @@
+import os
 import torch
 from fastapi import FastAPI, APIRouter, HTTPException
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from .schemas import TextArgs, ImageArgs
-from ..utils.api_util import generate_txt2img, generate_img2img
+from ..utils.api_util import generate_txt2img, generate_img2img, get_files
+from ..utils.constants import MODELS_PATH, VAES_PATH, EMBEDDINGS_PATH, LORAS_PATH
 from transformers import logging
 
 logging.set_verbosity_error()
 
 busy = False
 app = FastAPI(title="diffusion api")
-router = APIRouter(prefix="/v1/images")
+router = APIRouter(prefix="/v1")
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,6 +25,29 @@ app.add_middleware(
 @app.get("/")
 def read_root():
     return {"status": "API running"}
+
+
+@router.get("/models")
+def get_models() -> list[str]:
+    models_list = get_files(os.path.join(MODELS_PATH, "sdv1"))
+    for i in range(len(models_list)):
+        models_list[i] = "sdv1/" + models_list[i]
+    return models_list
+
+
+@router.get("/vaes")
+def get_vaes() -> list[str]:
+    return get_files(VAES_PATH)
+
+
+@router.get("/embeddings")
+def get_embeddings() -> list[str]:
+    return get_files(EMBEDDINGS_PATH)
+
+
+@router.get("/loras")
+def get_loras() -> list[str]:
+    return get_files(LORAS_PATH)
 
 
 @router.post(

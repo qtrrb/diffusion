@@ -15,6 +15,15 @@ from ..modules.lora import Lora
 from ..modules.textual_inversion import Embedding
 
 
+def get_files(path):
+    files = [
+        f
+        for f in os.listdir(path)
+        if os.path.isfile(os.path.join(path, f)) and f != ".gitkeep"
+    ]
+    return files
+
+
 def convert_url_to_img(url: str) -> Image:
     response = requests.get(url)
     image = Image.open(io.BytesIO(response.content)).convert("RGB")
