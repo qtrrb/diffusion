@@ -52,7 +52,6 @@ class DiffusionPipeline(ABC):
             print("unexpected keys:")
             print(u)
 
-        model.cuda()
         model.eval()
         model.to(self.dtype)
 
