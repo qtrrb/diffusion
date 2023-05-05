@@ -1,17 +1,13 @@
 import os
-import sys
 from transformers import logging
 
-root_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(root_folder)
-
-from diffusion.utils.constants import MODELS_PATH, EMBEDDINGS_PATH  # noqa: E402
-from diffusion.pipelines.diffusion_txt2img_pipeline import (  # noqa: E402
+from diffusion.utils.constants import MODELS_PATH, EMBEDDINGS_PATH
+from diffusion.pipelines.diffusion_txt2img_pipeline import (
     DiffusionTxt2ImgPipeline,
 )
-from diffusion.samplers.ksampler import KSampler  # noqa: E402
+from diffusion.samplers.ksampler import KSampler
 
-from diffusion.modules.textual_inversion import (  # noqa: E402
+from diffusion.modules.textual_inversion import (
     Embedding,
 )
 

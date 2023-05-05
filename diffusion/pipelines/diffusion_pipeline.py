@@ -57,6 +57,7 @@ class DiffusionPipeline(ABC):
 
         # this is done after model.half() to avoid  converting VAE weights to float16
         if self.vae_path != "":
+            print(f"Loading VAE from {self.vae_path}")
             if self.vae_path.endswith(".safetensors"):
                 vae_sd = load_file(self.vae_path, device="cpu")
             else:
