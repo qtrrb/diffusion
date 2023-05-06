@@ -11,6 +11,7 @@ A fork of [stable diffusion](https://github.com/Stability-AI/stablediffusion) th
 - Upscaling
 - A1111 LoRA support
 - Textual inversion support
+- ControlNet
 - VAE loading
 - K-Diffusion schedulers
 - Safetensors support
