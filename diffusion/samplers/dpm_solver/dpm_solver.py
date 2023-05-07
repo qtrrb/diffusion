@@ -360,7 +360,30 @@ def model_wrapper(
             else:
                 x_in = torch.cat([x] * 2)
                 t_in = torch.cat([t_continuous] * 2)
-                c_in = torch.cat([unconditional_condition, condition])
+
+                if unconditional_condition.size(1) < condition.size(1):
+                    padding_length = condition.size(1) - unconditional_condition.size(1)
+                    padding = torch.zeros(
+                        (
+                            unconditional_condition.size(0),
+                            padding_length,
+                            unconditional_condition.size(2),
+                        )
+                    ).to("cuda")
+                    uncond = torch.cat([unconditional_condition, padding], dim=1)
+                    cond = condition
+                elif unconditional_condition.size(1) > condition.size(1):
+                    padding_length = unconditional_condition.size(1) - condition.size(1)
+                    padding = torch.zeros(
+                        (condition.size(0), padding_length, condition.size(2))
+                    ).to("cuda")
+                    cond = torch.cat([condition, padding], dim=1)
+                    uncond = unconditional_condition
+                else:
+                    cond = condition
+                    uncond = unconditional_condition
+
+                c_in = torch.cat([uncond, cond])
                 noise_uncond, noise = noise_pred_fn(x_in, t_in, cond=c_in).chunk(2)
                 return noise_uncond + guidance_scale * (noise - noise_uncond)
 

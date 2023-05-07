@@ -12,6 +12,20 @@ class CFGDenoiser(nn.Module):
     def forward(self, x, sigma, cond, uncond, cond_scale):
         x_in = torch.cat([x] * 2)
         sigma_in = torch.cat([sigma] * 2)
+
+        if uncond.size(1) < cond.size(1):
+            padding_length = cond.size(1) - uncond.size(1)
+            padding = torch.zeros((uncond.size(0), padding_length, uncond.size(2))).to(
+                "cuda"
+            )
+            uncond = torch.cat([uncond, padding], dim=1)
+        elif uncond.size(1) > cond.size(1):
+            padding_length = uncond.size(1) - cond.size(1)
+            padding = torch.zeros((cond.size(0), padding_length, cond.size(2))).to(
+                "cuda"
+            )
+            cond = torch.cat([cond, padding], dim=1)
+
         cond_in = torch.cat([uncond, cond])
         uncond, cond = self.inner_model(x_in, sigma_in, cond=cond_in).chunk(2)
         return uncond + (cond - uncond) * cond_scale

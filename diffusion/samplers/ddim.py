@@ -307,6 +307,25 @@ class DDIMSampler(object):
                 for i in range(len(c)):
                     c_in.append(torch.cat([unconditional_conditioning[i], c[i]]))
             else:
+                if unconditional_conditioning.size(1) < c.size(1):
+                    padding_length = c.size(1) - unconditional_conditioning.size(1)
+                    padding = torch.zeros(
+                        (
+                            unconditional_conditioning.size(0),
+                            padding_length,
+                            unconditional_conditioning.size(2),
+                        )
+                    ).to("cuda")
+                    unconditional_conditioning = torch.cat(
+                        [unconditional_conditioning, padding], dim=1
+                    )
+                elif unconditional_conditioning.size(1) > c.size(1):
+                    padding_length = unconditional_conditioning.size(1) - c.size(1)
+                    padding = torch.zeros((c.size(0), padding_length, c.size(2))).to(
+                        "cuda"
+                    )
+                    c = torch.cat([c, padding], dim=1)
+
                 c_in = torch.cat([unconditional_conditioning, c])
             model_uncond, model_t = self.model.apply_model(x_in, t_in, c_in).chunk(2)
             model_output = model_uncond + unconditional_guidance_scale * (
