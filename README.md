@@ -12,6 +12,7 @@ A fork of [stable diffusion](https://github.com/Stability-AI/stablediffusion) th
 - A1111 LoRA support
 - Textual inversion support
 - ControlNet
+- Unlimited tokens
 - VAE loading
 - K-Diffusion schedulers
 - Safetensors support
