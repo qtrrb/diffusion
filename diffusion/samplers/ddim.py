@@ -292,6 +292,40 @@ class DDIMSampler(object):
             t_in = torch.cat([t] * 2)
             if isinstance(c, dict):
                 assert isinstance(unconditional_conditioning, dict)
+
+                if unconditional_conditioning["c_crossattn"][0].size(1) < c[
+                    "c_crossattn"
+                ][0].size(1):
+                    padding_length = c["c_crossattn"][0].size(
+                        1
+                    ) - unconditional_conditioning["c_crossattn"][0].size(1)
+                    padding = torch.zeros(
+                        (
+                            unconditional_conditioning["c_crossattn"][0].size(0),
+                            padding_length,
+                            unconditional_conditioning["c_crossattn"][0].size(2),
+                        )
+                    ).to("cuda")
+                    unconditional_conditioning["c_crossattn"][0] = torch.cat(
+                        [unconditional_conditioning["c_crossattn"][0], padding], dim=1
+                    )
+                elif unconditional_conditioning["c_crossattn"][0].size(1) > c[
+                    "c_crossattn"
+                ][0].size(1):
+                    padding_length = unconditional_conditioning["c_crossattn"][0].size(
+                        1
+                    ) - c["c_crossattn"][0].size(1)
+                    padding = torch.zeros(
+                        (
+                            c["c_crossattn"][0].size(0),
+                            padding_length,
+                            c["c_crossattn"][0].size(2),
+                        )
+                    ).to("cuda")
+                    c["c_crossattn"][0] = torch.cat(
+                        [c["c_crossattn"][0], padding], dim=1
+                    )
+
                 c_in = dict()
                 for k in c:
                     if isinstance(c[k], list):
