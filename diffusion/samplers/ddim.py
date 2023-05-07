@@ -335,11 +335,6 @@ class DDIMSampler(object):
                         ]
                     else:
                         c_in[k] = torch.cat([unconditional_conditioning[k], c[k]])
-            elif isinstance(c, list):
-                c_in = list()
-                assert isinstance(unconditional_conditioning, list)
-                for i in range(len(c)):
-                    c_in.append(torch.cat([unconditional_conditioning[i], c[i]]))
             else:
                 if unconditional_conditioning.size(1) < c.size(1):
                     padding_length = c.size(1) - unconditional_conditioning.size(1)
