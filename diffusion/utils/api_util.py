@@ -91,7 +91,7 @@ def generate_txt2img(args: TextArgs) -> bytes:
         layer_skip=layer_skip,
         loras=loras,
         embedding=embedding,
-    )
+    )[0]
 
     if args.upscale > 1:
         upscale_pipeline = DiffusionUpscalingPipeline(model, vae)
@@ -105,7 +105,7 @@ def generate_txt2img(args: TextArgs) -> bytes:
             layer_skip=layer_skip,
             loras=loras,
             embedding=embedding,
-        )
+        )[0]
 
     img_bytes = convert_img_to_byte_array(image)
 
@@ -144,7 +144,7 @@ def generate_img2img(args: ImageArgs) -> bytes:
         layer_skip=layer_skip,
         loras=loras,
         embedding=embedding,
-    )
+    )[0]
 
     if args.upscale > 1:
         upscale_pipeline = DiffusionUpscalingPipeline(model, vae)
@@ -158,7 +158,7 @@ def generate_img2img(args: ImageArgs) -> bytes:
             layer_skip=layer_skip,
             loras=loras,
             embedding=embedding,
-        )
+        )[0]
 
     img_bytes = convert_img_to_byte_array(image)
 

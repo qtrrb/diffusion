@@ -34,6 +34,6 @@ image = pipeline(
     steps=30,
     init_image=control_image,
     layer_skip=2,
-)
+)[0]
 control_image.show()
 image.show()

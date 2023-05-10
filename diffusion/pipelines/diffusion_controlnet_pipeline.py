@@ -3,7 +3,7 @@ import os
 import random
 import torch
 
-from einops import rearrange
+from einops import rearrange, repeat
 from omegaconf import OmegaConf
 from PIL import Image
 from safetensors.torch import load_file
@@ -106,6 +106,7 @@ class DiffusionControlNetPipeline(DiffusionPipeline):
         seed=-1,
         scale=7,
         strength=0.7,
+        batch_size=1,
         ddim_eta=0.0,
         layer_skip=1,
         loras: list[Lora] = [],
@@ -128,6 +129,7 @@ class DiffusionControlNetPipeline(DiffusionPipeline):
             self.model.cond_stage_model.layer_skip = layer_skip
 
         control, W, H = self.load_control_image(init_image)
+        control = repeat(control, "1 ... -> b ...", b=batch_size)
 
         assert 0.0 <= strength <= 1.0, "can only work with strength in [0.0, 1.0]"
         self.model.control_scales = [strength] * 13
@@ -148,18 +150,22 @@ class DiffusionControlNetPipeline(DiffusionPipeline):
         with torch.no_grad(), precision_scope("cuda"), self.model.ema_scope():
             cond = {
                 "c_concat": [control],
-                "c_crossattn": [self.model.get_learned_conditioning([prompt])],
+                "c_crossattn": [
+                    self.model.get_learned_conditioning([prompt] * batch_size)
+                ],
             }
             un_cond = {
                 "c_concat": [control],
-                "c_crossattn": [self.model.get_learned_conditioning([negative_prompt])],
+                "c_crossattn": [
+                    self.model.get_learned_conditioning([negative_prompt] * batch_size)
+                ],
             }
 
             shape = [C, H // f, W // f]
             samples, _ = sampler.sample(
                 S=steps,
                 shape=shape,
-                batch_size=1,
+                batch_size=batch_size,
                 conditioning=cond,
                 verbose=False,
                 eta=ddim_eta,
@@ -167,15 +173,18 @@ class DiffusionControlNetPipeline(DiffusionPipeline):
                 unconditional_conditioning=un_cond,
             )
 
-            x_sample = self.model.decode_first_stage(samples)
-            x_sample = torch.clamp((x_sample + 1.0) / 2.0, min=0.0, max=1.0)
+            imgs = []
+            x_samples = self.model.decode_first_stage(samples)
+            x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
+            for x_sample in x_samples:
+                x_sample = 255.0 * rearrange(x_sample.cpu().numpy(), "c h w -> h w c")
+                img = Image.fromarray(x_sample.astype(np.uint8))
+                imgs.append(img)
 
-            x_sample = 255.0 * rearrange(x_sample.cpu().numpy(), "1 c h w -> h w c")
-            img = Image.fromarray(x_sample.astype(np.uint8))
-
+        lora_manager.clear_loras()
         print("Done!")
 
-        return img
+        return imgs
 
     def __call__(
         self,
@@ -186,6 +195,7 @@ class DiffusionControlNetPipeline(DiffusionPipeline):
         seed=-1,
         scale=7,
         strength=0.7,
+        batch_size=1,
         ddim_eta=0.0,
         layer_skip=1,
         loras: list[Lora] = [],
@@ -199,6 +209,7 @@ class DiffusionControlNetPipeline(DiffusionPipeline):
             seed,
             scale,
             strength,
+            batch_size,
             ddim_eta,
             layer_skip,
             loras,

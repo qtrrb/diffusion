@@ -35,6 +35,6 @@ image = pipeline(
     layer_skip=2,
     scale=10,
     embedding=embedding,
-)
+)[0]
 
 image.show()

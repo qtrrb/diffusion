@@ -91,7 +91,7 @@ class KSampler:
         sigmas = K.sampling.get_sigmas_karras(
             self.timesteps, self.sigma_min, self.sigma_max, device="cuda"
         )
-        z = x0 + torch.randn_like(x0) * sigmas[self.timesteps - t]
+        z = x0 + torch.randn_like(x0) * sigmas[self.timesteps - t[0].item()]
         return z
 
     @torch.no_grad()

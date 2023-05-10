@@ -22,6 +22,6 @@ image = pipeline(
     H=640,
     W=448,
     layer_skip=2,
-)
+)[0]
 
 image.show()

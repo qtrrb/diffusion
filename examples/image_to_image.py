@@ -26,6 +26,6 @@ image = pipeline(
     init_image=init_image,
     seed=42 + 31337,
     layer_skip=2,
-)
+)[0]
 
 image.show()

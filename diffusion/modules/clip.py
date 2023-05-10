@@ -98,15 +98,15 @@ class FrozenCLIPEmbedder(AbstractEncoder):
                 # Pad the chunk if its length is less than max_length
                 if token_chunk.shape[1] < self.max_length:
                     padding_length = self.max_length - token_chunk.shape[1]
-                    padding = torch.zeros((1, padding_length), dtype=torch.int32).to(
-                        self.device
-                    )
-                    padding[0, :] = self.tokenizer.pad_token_id
+                    padding = torch.zeros(
+                        (token_chunk.shape[0], padding_length), dtype=torch.int32
+                    ).to(self.device)
+                    padding[:, :] = self.tokenizer.pad_token_id
                     token_chunk = torch.cat([token_chunk, padding], dim=1)
 
                 # add starting and ending tokens
-                token_chunk[0, 0] = tokens[0, 0]
-                token_chunk[0, -1] = tokens[0, -1]
+                token_chunk[:, 0] = tokens[:, 0]
+                token_chunk[:, -1] = tokens[:, -1]
 
                 outputs = self.transformer(
                     input_ids=token_chunk, output_hidden_states=(self.layer_skip > 1)
