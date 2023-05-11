@@ -95,7 +95,7 @@ class DiffusionControlNetPipeline(DiffusionPipeline):
         image = image[None].transpose(0, 3, 1, 2)
         image = torch.from_numpy(image)
         image = image.to("cuda")
-        return image, w, h
+        return image
 
     def generate(
         self,
@@ -128,7 +128,8 @@ class DiffusionControlNetPipeline(DiffusionPipeline):
         if self.version == "v1":
             self.model.cond_stage_model.layer_skip = layer_skip
 
-        control, W, H = self.load_control_image(init_image)
+        control = self.load_control_image(init_image)
+        _, H, W = control[0].size()
         control = repeat(control, "1 ... -> b ...", b=batch_size)
 
         assert 0.0 <= strength <= 1.0, "can only work with strength in [0.0, 1.0]"
