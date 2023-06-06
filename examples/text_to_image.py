@@ -1,15 +1,11 @@
 import os
-import sys
 from transformers import logging
 
-root_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(root_folder)
-
-from diffusion.utils.constants import MODELS_PATH  # noqa: E402
-from diffusion.pipelines.diffusion_txt2img_pipeline import (  # noqa: E402
+from diffusion.utils.constants import MODELS_PATH
+from diffusion.pipelines.diffusion_txt2img_pipeline import (
     DiffusionTxt2ImgPipeline,
 )
-from diffusion.samplers.ksampler import KSampler  # noqa: E402
+from diffusion.samplers.ksampler import KSampler
 
 logging.set_verbosity_error()
 
@@ -26,6 +22,6 @@ image = pipeline(
     H=640,
     W=448,
     layer_skip=2,
-)
+)[0]
 
 image.show()

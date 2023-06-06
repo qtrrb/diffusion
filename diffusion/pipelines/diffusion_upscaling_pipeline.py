@@ -5,7 +5,7 @@ import random
 import torch
 import typing
 
-from einops import rearrange
+from einops import rearrange, repeat
 from PIL import Image
 from torch import autocast
 
@@ -48,6 +48,7 @@ class DiffusionUpscalingPipeline(DiffusionPipeline):
         scale=7,
         strength=0.7,
         ddim_eta=0.0,
+        batch_size=1,
         layer_skip=1,
         loras: list[Lora] = [],
         embedding: Embedding | None = None,
@@ -67,6 +68,7 @@ class DiffusionUpscalingPipeline(DiffusionPipeline):
             self.model.cond_stage_model.layer_skip = layer_skip
 
         init_image_tensor = self.load_img(init_image, upscale).to(torch.device("cuda"))
+        init_image_tensor = repeat(init_image_tensor, "1 ... -> b ...", b=batch_size)
         init_latent = self.model.get_first_stage_encoding(
             self.model.encode_first_stage(init_image_tensor)
         )  # move to latent space
@@ -90,12 +92,12 @@ class DiffusionUpscalingPipeline(DiffusionPipeline):
         precision_scope = autocast
 
         with torch.no_grad(), precision_scope("cuda"), self.model.ema_scope():
-            uc = self.model.get_learned_conditioning([negative_prompt])
-            c = self.model.get_learned_conditioning([prompt])
+            uc = self.model.get_learned_conditioning(batch_size * [negative_prompt])
+            c = self.model.get_learned_conditioning(batch_size * [prompt])
 
             # encode (scaled latent)
             z_enc = sampler.stochastic_encode(
-                init_latent, torch.tensor([t_enc]).to(torch.device("cuda"))
+                init_latent, torch.tensor([t_enc] * batch_size).to(torch.device("cuda"))
             )
             # decode it
             samples = sampler.decode(
@@ -106,16 +108,18 @@ class DiffusionUpscalingPipeline(DiffusionPipeline):
                 unconditional_conditioning=uc,
             )
 
-            x_sample = self.model.decode_first_stage(samples)
-            x_sample = torch.clamp((x_sample + 1.0) / 2.0, min=0.0, max=1.0)
-
-            x_sample = 255.0 * rearrange(x_sample.cpu().numpy(), "1 c h w -> h w c")
-            img = Image.fromarray(x_sample.astype(np.uint8))
+            imgs = []
+            x_samples = self.model.decode_first_stage(samples)
+            x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
+            for x_sample in x_samples:
+                x_sample = 255.0 * rearrange(x_sample.cpu().numpy(), "c h w -> h w c")
+                img = Image.fromarray(x_sample.astype(np.uint8))
+                imgs.append(img)
 
         lora_manager.clear_loras()
         print("Done!")
 
-        return img
+        return imgs
 
     def __call__(
         self,
@@ -128,6 +132,7 @@ class DiffusionUpscalingPipeline(DiffusionPipeline):
         scale=7,
         strength=0.7,
         ddim_eta=0.0,
+        batch_size=1,
         layer_skip=1,
         loras: list[Lora] = [],
         embedding: Embedding | None = None,
@@ -142,6 +147,7 @@ class DiffusionUpscalingPipeline(DiffusionPipeline):
             scale,
             strength,
             ddim_eta,
+            batch_size,
             layer_skip,
             loras,
             embedding,

@@ -6,6 +6,8 @@ from transformers import CLIPTokenizer, CLIPTextModel
 
 import open_clip
 
+import math
+
 
 class AbstractEncoder(nn.Module):
     def __init__(self):
@@ -51,7 +53,7 @@ class FrozenCLIPEmbedder(AbstractEncoder):
         for param in self.parameters():
             param.requires_grad = False
 
-    def forward(self, text):
+    def old_forward(self, text):
         batch_encoding = self.tokenizer(
             text,
             truncation=True,
@@ -71,6 +73,64 @@ class FrozenCLIPEmbedder(AbstractEncoder):
             )
         else:
             z = outputs.last_hidden_state
+        return z
+
+    def forward(self, text):
+        # Tokenize text
+        batch_encoding = self.tokenizer(
+            text,
+            truncation=False,
+            max_length=self.max_length,
+            return_length=True,
+            return_overflowing_tokens=False,
+            padding="max_length",
+            return_tensors="pt",
+        )
+
+        tokens = batch_encoding["input_ids"].to(self.device)
+        chunks = math.ceil((tokens.shape[1] - 2) / (self.max_length - 2))
+        if chunks > 1:
+            chunk_embeddings = []
+            for i in range(chunks):
+                token_chunk = tokens[
+                    :, i * (self.max_length - 2) : (i + 1) * (self.max_length - 2) + 2
+                ].clone()
+                # Pad the chunk if its length is less than max_length
+                if token_chunk.shape[1] < self.max_length:
+                    padding_length = self.max_length - token_chunk.shape[1]
+                    padding = torch.zeros(
+                        (token_chunk.shape[0], padding_length), dtype=torch.int32
+                    ).to(self.device)
+                    padding[:, :] = self.tokenizer.pad_token_id
+                    token_chunk = torch.cat([token_chunk, padding], dim=1)
+
+                # add starting and ending tokens
+                token_chunk[:, 0] = tokens[:, 0]
+                token_chunk[:, -1] = tokens[:, -1]
+
+                outputs = self.transformer(
+                    input_ids=token_chunk, output_hidden_states=(self.layer_skip > 1)
+                )
+                if self.layer_skip > 1:
+                    chunk_embedding = self.transformer.text_model.final_layer_norm(
+                        outputs.hidden_states[-self.layer_skip]
+                    )
+                else:
+                    chunk_embedding = outputs.last_hidden_state
+                chunk_embeddings.append(chunk_embedding)
+
+            z = torch.cat(chunk_embeddings, dim=1)
+            return z
+        else:
+            outputs = self.transformer(
+                input_ids=tokens, output_hidden_states=(self.layer_skip > 1)
+            )
+            if self.layer_skip > 1:
+                z = self.transformer.text_model.final_layer_norm(
+                    outputs.hidden_states[-self.layer_skip]
+                )
+            else:
+                z = outputs.last_hidden_state
         return z
 
     def encode(self, text):

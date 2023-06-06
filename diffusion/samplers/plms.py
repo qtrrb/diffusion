@@ -293,7 +293,30 @@ class PLMSSampler(object):
             else:
                 x_in = torch.cat([x] * 2)
                 t_in = torch.cat([t] * 2)
-                c_in = torch.cat([unconditional_conditioning, c])
+
+                if unconditional_conditioning.size(1) < c.size(1):
+                    padding_length = c.size(1) - unconditional_conditioning.size(1)
+                    padding = torch.zeros(
+                        (
+                            unconditional_conditioning.size(0),
+                            padding_length,
+                            unconditional_conditioning.size(2),
+                        )
+                    ).to("cuda")
+                    uncond = torch.cat([unconditional_conditioning, padding], dim=1)
+                    cond = c
+                elif unconditional_conditioning.size(1) > c.size(1):
+                    padding_length = unconditional_conditioning.size(1) - c.size(1)
+                    padding = torch.zeros((c.size(0), padding_length, c.size(2))).to(
+                        "cuda"
+                    )
+                    cond = torch.cat([c, padding], dim=1)
+                    uncond = unconditional_conditioning
+                else:
+                    cond = c
+                    uncond = unconditional_conditioning
+
+                c_in = torch.cat([uncond, cond])
                 e_t_uncond, e_t = self.model.apply_model(x_in, t_in, c_in).chunk(2)
                 e_t = e_t_uncond + unconditional_guidance_scale * (e_t - e_t_uncond)
 

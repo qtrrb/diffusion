@@ -1,15 +1,11 @@
 import os
 import requests
-import sys
 from io import BytesIO
 from transformers import logging
 from PIL import Image
 
-root_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(root_folder)
-
-from diffusion.utils.constants import MODELS_PATH  # noqa: E402
-from diffusion.pipelines.diffusion_img2img_pipeline import (  # noqa: E402
+from diffusion.utils.constants import MODELS_PATH
+from diffusion.pipelines.diffusion_img2img_pipeline import (
     DiffusionImg2ImgPipeline,
 )
 
@@ -30,6 +26,6 @@ image = pipeline(
     init_image=init_image,
     seed=42 + 31337,
     layer_skip=2,
-)
+)[0]
 
 image.show()

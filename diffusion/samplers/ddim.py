@@ -292,6 +292,40 @@ class DDIMSampler(object):
             t_in = torch.cat([t] * 2)
             if isinstance(c, dict):
                 assert isinstance(unconditional_conditioning, dict)
+
+                if unconditional_conditioning["c_crossattn"][0].size(1) < c[
+                    "c_crossattn"
+                ][0].size(1):
+                    padding_length = c["c_crossattn"][0].size(
+                        1
+                    ) - unconditional_conditioning["c_crossattn"][0].size(1)
+                    padding = torch.zeros(
+                        (
+                            unconditional_conditioning["c_crossattn"][0].size(0),
+                            padding_length,
+                            unconditional_conditioning["c_crossattn"][0].size(2),
+                        )
+                    ).to("cuda")
+                    unconditional_conditioning["c_crossattn"][0] = torch.cat(
+                        [unconditional_conditioning["c_crossattn"][0], padding], dim=1
+                    )
+                elif unconditional_conditioning["c_crossattn"][0].size(1) > c[
+                    "c_crossattn"
+                ][0].size(1):
+                    padding_length = unconditional_conditioning["c_crossattn"][0].size(
+                        1
+                    ) - c["c_crossattn"][0].size(1)
+                    padding = torch.zeros(
+                        (
+                            c["c_crossattn"][0].size(0),
+                            padding_length,
+                            c["c_crossattn"][0].size(2),
+                        )
+                    ).to("cuda")
+                    c["c_crossattn"][0] = torch.cat(
+                        [c["c_crossattn"][0], padding], dim=1
+                    )
+
                 c_in = dict()
                 for k in c:
                     if isinstance(c[k], list):
@@ -301,12 +335,26 @@ class DDIMSampler(object):
                         ]
                     else:
                         c_in[k] = torch.cat([unconditional_conditioning[k], c[k]])
-            elif isinstance(c, list):
-                c_in = list()
-                assert isinstance(unconditional_conditioning, list)
-                for i in range(len(c)):
-                    c_in.append(torch.cat([unconditional_conditioning[i], c[i]]))
             else:
+                if unconditional_conditioning.size(1) < c.size(1):
+                    padding_length = c.size(1) - unconditional_conditioning.size(1)
+                    padding = torch.zeros(
+                        (
+                            unconditional_conditioning.size(0),
+                            padding_length,
+                            unconditional_conditioning.size(2),
+                        )
+                    ).to("cuda")
+                    unconditional_conditioning = torch.cat(
+                        [unconditional_conditioning, padding], dim=1
+                    )
+                elif unconditional_conditioning.size(1) > c.size(1):
+                    padding_length = unconditional_conditioning.size(1) - c.size(1)
+                    padding = torch.zeros((c.size(0), padding_length, c.size(2))).to(
+                        "cuda"
+                    )
+                    c = torch.cat([c, padding], dim=1)
+
                 c_in = torch.cat([unconditional_conditioning, c])
             model_uncond, model_t = self.model.apply_model(x_in, t_in, c_in).chunk(2)
             model_output = model_uncond + unconditional_guidance_scale * (

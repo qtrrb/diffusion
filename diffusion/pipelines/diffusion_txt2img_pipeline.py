@@ -33,6 +33,7 @@ class DiffusionTxt2ImgPipeline(DiffusionPipeline):
         scale=7,
         ddim_eta=0.0,
         sampler=None,
+        batch_size=1,
         H=512,
         W=512,
         layer_skip=1,
@@ -71,13 +72,13 @@ class DiffusionTxt2ImgPipeline(DiffusionPipeline):
         precision_scope = autocast
 
         with torch.no_grad(), precision_scope("cuda"), self.model.ema_scope():
-            uc = self.model.get_learned_conditioning([negative_prompt])
-            c = self.model.get_learned_conditioning([prompt])
+            uc = self.model.get_learned_conditioning(batch_size * [negative_prompt])
+            c = self.model.get_learned_conditioning(batch_size * [prompt])
             shape = [C, H // f, W // f]
             samples, _ = sampler.sample(
                 S=steps,
                 conditioning=c,
-                batch_size=1,
+                batch_size=batch_size,
                 shape=shape,
                 verbose=False,
                 unconditional_guidance_scale=scale,
@@ -86,16 +87,19 @@ class DiffusionTxt2ImgPipeline(DiffusionPipeline):
                 x_T=start_code,
             )
 
-            x_sample = self.model.decode_first_stage(samples)
-            x_sample = torch.clamp((x_sample + 1.0) / 2.0, min=0.0, max=1.0)
+            x_samples = self.model.decode_first_stage(samples)
+            imgs = []
+            for x_sample in x_samples:
+                x_sample = torch.clamp((x_sample + 1.0) / 2.0, min=0.0, max=1.0)
 
-            x_sample = 255.0 * rearrange(x_sample.cpu().numpy(), "1 c h w -> h w c")
-            img = Image.fromarray(x_sample.astype(np.uint8))
+                x_sample = 255.0 * rearrange(x_sample.cpu().numpy(), "c h w -> h w c")
+                img = Image.fromarray(x_sample.astype(np.uint8))
+                imgs.append(img)
 
         lora_manager.clear_loras()
         print("Done!")
 
-        return img
+        return imgs
 
     def __call__(
         self,
@@ -106,6 +110,7 @@ class DiffusionTxt2ImgPipeline(DiffusionPipeline):
         scale=7,
         ddim_eta=0.0,
         sampler=None,
+        batch_size=1,
         H=512,
         W=512,
         layer_skip=1,
@@ -120,6 +125,7 @@ class DiffusionTxt2ImgPipeline(DiffusionPipeline):
             scale,
             ddim_eta,
             sampler,
+            batch_size,
             H,
             W,
             layer_skip,

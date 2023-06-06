@@ -1,18 +1,14 @@
 import os
 import requests
-import sys
 from io import BytesIO
 from transformers import logging
 from PIL import Image
 
-root_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(root_folder)
-
-from diffusion.utils.constants import MODELS_PATH  # noqa: E402
-from diffusion.pipelines.diffusion_img2img_pipeline import (  # noqa: E402
+from diffusion.utils.constants import MODELS_PATH
+from diffusion.pipelines.diffusion_img2img_pipeline import (
     DiffusionImg2ImgPipeline,
 )
-from diffusion.pipelines.diffusion_upscaling_pipeline import (  # noqa: E402
+from diffusion.pipelines.diffusion_upscaling_pipeline import (
     DiffusionUpscalingPipeline,
 )
 
@@ -34,7 +30,7 @@ image = pipeline(
     init_image=init_image,
     seed=42 + 31337,
     layer_skip=2,
-)
+)[0]
 image = upscale_pipeline(
     prompt="masterpiece, best quality, ultra-detailed, illustration, fantasy landscape",  # noqa: E501
     negative_prompt="lowres, bad anatomy, bad hands, text, missing finger, extra digits, fewer digits, blurry, mutated hands and fingers, poorly drawn face, mutation, deformed face, ugly, bad proportions, extra limbs, extra face, double head, extra head, extra feet, monster, logo, cropped, worst quality, low quality, normal quality, jpeg, humpbacked, long body, long neck, jpeg artifacts",  # noqa: E501
@@ -42,6 +38,6 @@ image = upscale_pipeline(
     upscale=2,
     seed=42 + 31337,
     layer_skip=2,
-)
+)[0]
 
 image.show()
