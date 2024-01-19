@@ -1,6 +1,6 @@
 model:
   base_learning_rate: 1.0e-04
-  target: diffusion.samplers.ddpm.LatentDiffusion
+  target: diffusion.ldm.models.diffusion.ddpm.LatentDiffusion
   params:
     linear_start: 0.00085
     linear_end: 0.0120
@@ -18,7 +18,7 @@ model:
     use_ema: False
 
     unet_config:
-      target: diffusion.modules.unet.UNetModel
+      target: diffusion.ldm.modules.diffusionmodules.unet.UNetModel
       params:
         image_size: 32 # unused
         in_channels: 4
@@ -35,7 +35,7 @@ model:
         legacy: False
 
     first_stage_config:
-      target: diffusion.modules.autoencoder.AutoencoderKL
+      target: diffusion.ldm.models.autoencoder.AutoencoderKL
       params:
         embed_dim: 4
         monitor: val/rec_loss
@@ -58,6 +58,6 @@ model:
           target: torch.nn.Identity
 
     cond_stage_config:
-      target: diffusion.modules.clip.FrozenCLIPEmbedder
+      target: diffusion.clip.FrozenCLIPEmbedder
       params:
         layer_skip: 1

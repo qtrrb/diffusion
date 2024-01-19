@@ -4,7 +4,7 @@ import torch
 import numpy as np
 from tqdm import tqdm
 
-from ..utils.diffusion_util import (
+from ...modules.diffusionmodules.util import (
     make_ddim_sampling_parameters,
     make_ddim_timesteps,
     noise_like,

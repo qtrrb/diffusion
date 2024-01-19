@@ -9,12 +9,12 @@ from PIL import Image
 from safetensors.torch import load_file
 from torch import autocast
 
-from ..samplers.ddim import DDIMSampler
+from ..ldm.models.diffusion.ddim import DDIMSampler
 from .diffusion_pipeline import DiffusionPipeline
-from ..modules.lora import Lora, LoRAManager
-from ..modules.textual_inversion import Embedding, TextualInversionManager
-from ..utils.constants import CONFIGS_PATH
-from ..utils.util import instantiate_from_config
+from ..lora import Lora, LoRAManager
+from ..textual_inversion import Embedding, TextualInversionManager
+from ..constants import CONFIGS_PATH
+from ..ldm.util import instantiate_from_config
 
 
 class DiffusionControlNetPipeline(DiffusionPipeline):

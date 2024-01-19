@@ -8,10 +8,10 @@ from einops import rearrange
 from PIL import Image
 from torch import autocast
 
-from ..samplers.ddim import DDIMSampler
+from ..ldm.models.diffusion.ddim import DDIMSampler
 from .diffusion_pipeline import DiffusionPipeline
-from ..modules.lora import Lora, LoRAManager
-from ..modules.textual_inversion import Embedding, TextualInversionManager
+from ..lora import Lora, LoRAManager
+from ..textual_inversion import Embedding, TextualInversionManager
 
 
 class DiffusionTxt2ImgPipeline(DiffusionPipeline):

@@ -4,7 +4,7 @@ from io import BytesIO
 from transformers import logging
 from PIL import Image
 
-from diffusion.utils.constants import MODELS_PATH
+from diffusion.constants import MODELS_PATH
 from diffusion.pipelines.diffusion_img2img_pipeline import (
     DiffusionImg2ImgPipeline,
 )

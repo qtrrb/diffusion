@@ -20,7 +20,7 @@ from torchvision.utils import make_grid
 from pytorch_lightning.utilities.rank_zero import rank_zero_only
 from omegaconf import ListConfig
 
-from ..utils.util import (
+from ...util import (
     log_txt_as_img,
     exists,
     default,
@@ -30,13 +30,13 @@ from ..utils.util import (
     count_params,
     instantiate_from_config,
 )
-from ..modules.ema import LitEma
-from ..modules.distributions import (
+from ...modules.ema import LitEma
+from ...modules.distributions import (
     normal_kl,
     DiagonalGaussianDistribution,
 )
-from ..modules.autoencoder import IdentityFirstStage, AutoencoderKL
-from ..utils.diffusion_util import (
+from ..autoencoder import IdentityFirstStage, AutoencoderKL
+from ...modules.diffusionmodules.util import (
     make_beta_schedule,
     extract_into_tensor,
     noise_like,

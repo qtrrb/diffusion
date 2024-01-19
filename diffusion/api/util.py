@@ -2,17 +2,17 @@ import io
 import os
 import requests
 from PIL import Image
-from ..api.schemas import TextArgs, ImageArgs
-from .constants import MODELS_PATH, VAES_PATH, LORAS_PATH, EMBEDDINGS_PATH
+from .schemas import TextArgs, ImageArgs
+from ..constants import MODELS_PATH, VAES_PATH, LORAS_PATH, EMBEDDINGS_PATH
 from ..pipelines.diffusion_txt2img_pipeline import DiffusionTxt2ImgPipeline
 from ..pipelines.diffusion_img2img_pipeline import DiffusionImg2ImgPipeline
 from ..pipelines.diffusion_upscaling_pipeline import DiffusionUpscalingPipeline
-from ..samplers.ddim import DDIMSampler
-from ..samplers.dpm_solver import DPMSolverSampler
-from ..samplers.plms import PLMSSampler
-from ..samplers.ksampler import KSampler
-from ..modules.lora import Lora
-from ..modules.textual_inversion import Embedding
+from ..ldm.models.diffusion.ddim import DDIMSampler
+from ..ldm.models.diffusion.dpm_solver.sampler import DPMSolverSampler
+from ..ldm.models.diffusion.plms import PLMSSampler
+from ..ksampler import KSampler
+from ..lora import Lora
+from ..textual_inversion import Embedding
 
 
 def get_files(path):

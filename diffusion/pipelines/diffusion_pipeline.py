@@ -4,8 +4,8 @@ import typing
 from abc import ABC
 from omegaconf import OmegaConf
 from safetensors.torch import load_file
-from ..utils.constants import CONFIGS_PATH
-from ..utils.util import instantiate_from_config
+from ..constants import CONFIGS_PATH
+from ..ldm.util import instantiate_from_config
 
 
 class DiffusionPipeline(ABC):

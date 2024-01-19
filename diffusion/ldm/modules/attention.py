@@ -6,7 +6,7 @@ from torch import nn, einsum
 from einops import rearrange
 from typing import Optional, Any
 
-from ..utils.diffusion_util import checkpoint
+from .diffusionmodules.util import checkpoint
 
 
 try:

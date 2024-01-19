@@ -4,8 +4,8 @@ from fastapi import FastAPI, APIRouter, HTTPException
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from .schemas import TextArgs, ImageArgs
-from ..utils.api_util import generate_txt2img, generate_img2img, get_files
-from ..utils.constants import MODELS_PATH, VAES_PATH, EMBEDDINGS_PATH, LORAS_PATH
+from .util import generate_txt2img, generate_img2img, get_files
+from ..constants import MODELS_PATH, VAES_PATH, EMBEDDINGS_PATH, LORAS_PATH
 from transformers import logging
 
 logging.set_verbosity_error()

@@ -2,11 +2,11 @@ import torch
 import torch.nn.functional as F
 from contextlib import contextmanager
 
-from .encoder_decoder import Encoder, Decoder
-from .distributions import DiagonalGaussianDistribution
+from ..modules.diffusionmodules.encoder_decoder import Encoder, Decoder
+from ..modules.distributions import DiagonalGaussianDistribution
 
-from ..utils.util import instantiate_from_config
-from .ema import LitEma
+from ..util import instantiate_from_config
+from ..modules.ema import LitEma
 
 
 class AutoencoderKL(torch.nn.Module):

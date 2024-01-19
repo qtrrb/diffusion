@@ -18,8 +18,8 @@ from imwatermark import WatermarkEncoder
 
 
 from scripts.txt2img import put_watermark
-from ..utils.util import instantiate_from_config
-from ..samplers.ddim import DDIMSampler
+from ..ldm.util import instantiate_from_config
+from ..ldm.models.diffusion.ddim import DDIMSampler
 
 from safetensors.torch import load_file
 

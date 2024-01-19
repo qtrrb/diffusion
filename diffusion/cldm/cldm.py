@@ -6,7 +6,7 @@ import torch
 import torch as th
 import torch.nn as nn
 
-from ..utils.diffusion_util import (
+from ..ldm.modules.diffusionmodules.util import (
     conv_nd,
     linear,
     zero_module,
@@ -15,17 +15,17 @@ from ..utils.diffusion_util import (
 
 from einops import rearrange, repeat
 from torchvision.utils import make_grid
-from ..modules.attention import SpatialTransformer
-from ..modules.unet import (
+from ..ldm.modules.attention import SpatialTransformer
+from ..ldm.modules.diffusionmodules.unet import (
     UNetModel,
     TimestepEmbedSequential,
     ResBlock,
     Downsample,
     AttentionBlock,
 )
-from ..samplers.ddpm import LatentDiffusion
-from ..utils.util import log_txt_as_img, exists, instantiate_from_config
-from ..samplers.ddim import DDIMSampler
+from ..ldm.models.diffusion.ddpm import LatentDiffusion
+from ..ldm.util import log_txt_as_img, exists, instantiate_from_config
+from ..ldm.models.diffusion.ddim import DDIMSampler
 
 
 class ControlledUnetModel(UNetModel):

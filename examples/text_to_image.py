@@ -1,11 +1,11 @@
 import os
 from transformers import logging
 
-from diffusion.utils.constants import MODELS_PATH
+from diffusion.constants import MODELS_PATH
 from diffusion.pipelines.diffusion_txt2img_pipeline import (
     DiffusionTxt2ImgPipeline,
 )
-from diffusion.samplers.ksampler import KSampler
+from diffusion.ksampler import KSampler
 
 logging.set_verbosity_error()
 
