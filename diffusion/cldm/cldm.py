@@ -15,8 +15,8 @@ from ..utils.diffusion_util import (
 
 from einops import rearrange, repeat
 from torchvision.utils import make_grid
-from .attention import SpatialTransformer
-from .unet import (
+from ..modules.attention import SpatialTransformer
+from ..modules.unet import (
     UNetModel,
     TimestepEmbedSequential,
     ResBlock,

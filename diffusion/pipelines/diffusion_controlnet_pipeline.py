@@ -32,7 +32,7 @@ class DiffusionControlNetPipeline(DiffusionPipeline):
 
     def load_model_and_vae(self, verbose=False):
         config_path = os.path.join(
-            CONFIGS_PATH, f"control_v11p_sd15_{self.control_mode}.yaml"
+            CONFIGS_PATH, "control_v11p_sd15.yaml"
         )
         config = OmegaConf.load(f"{config_path}")
         model = instantiate_from_config(config.model)
