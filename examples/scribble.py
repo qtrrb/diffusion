@@ -1,7 +1,6 @@
 import os
 import requests
 from PIL import Image
-from transformers import logging
 from io import BytesIO
 
 from diffusion.constants import CONTROL_MODELS_PATH, MODELS_PATH
@@ -9,7 +8,6 @@ from diffusion.pipelines.diffusion_controlnet_pipeline import (
     DiffusionControlNetPipeline,
 )
 
-logging.set_verbosity_error()
 
 model_path = os.path.join(MODELS_PATH, "sdv1/pastelmix.safetensors")
 control_model_path = os.path.join(CONTROL_MODELS_PATH, "control_v11p_sd15_scribble.pth")

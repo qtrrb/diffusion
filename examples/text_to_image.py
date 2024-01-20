@@ -1,5 +1,4 @@
 import os
-from transformers import logging
 
 from diffusion.constants import MODELS_PATH
 from diffusion.pipelines.diffusion_txt2img_pipeline import (
@@ -7,7 +6,6 @@ from diffusion.pipelines.diffusion_txt2img_pipeline import (
 )
 from diffusion.ksampler import KSampler
 
-logging.set_verbosity_error()
 
 model_path = os.path.join(MODELS_PATH, "sdv1/pastelmix.safetensors")
 pipeline = DiffusionTxt2ImgPipeline(model_path)

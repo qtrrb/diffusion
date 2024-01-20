@@ -1,7 +1,6 @@
 import os
 import requests
 from io import BytesIO
-from transformers import logging
 from PIL import Image
 
 from diffusion.constants import MODELS_PATH
@@ -9,7 +8,6 @@ from diffusion.pipelines.diffusion_img2img_pipeline import (
     DiffusionImg2ImgPipeline,
 )
 
-logging.set_verbosity_error()
 
 url = "https://raw.githubusercontent.com/CompVis/stable-diffusion/main/assets/stable-samples/img2img/sketch-mountains-input.jpg"
 
