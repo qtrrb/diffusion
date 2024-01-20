@@ -4,17 +4,6 @@ A fork of [stable diffusion](https://github.com/Stability-AI/stablediffusion) th
 
 ![hero](./static/banner.png)
 
-## THIS PROJECT WILL BE CONTINUED SOON
-
-TODO: 
-
-- Refactor code to be closer to the original structure
-- Remove SD2 support for now, until all 1.5 features are supported, Focus for now is on 1.5
-- Refactor K-Diffusion schedulers to add more
-- Improve LoRA and VAE loading
-- Cleanup pipelines
-- Improve API
-
 ## Main Features
 
 - Upscaling
