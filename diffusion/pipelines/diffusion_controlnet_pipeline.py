@@ -125,8 +125,8 @@ class DiffusionControlNetPipeline(DiffusionPipeline):
         print(f"Seed set to {seed}")
         torch.manual_seed(seed)
 
-        if self.version == "v1":
-            self.model.cond_stage_model.layer_skip = layer_skip
+
+        self.model.cond_stage_model.layer_skip = layer_skip
 
         control = self.load_control_image(init_image)
         _, H, W = control[0].size()

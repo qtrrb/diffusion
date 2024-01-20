@@ -27,10 +27,7 @@ def read_root():
 
 @router.get("/models")
 def get_models() -> list[str]:
-    models_list = get_files(os.path.join(MODELS_PATH, "sdv1"))
-    for i in range(len(models_list)):
-        models_list[i] = "sdv1/" + models_list[i]
-    return models_list
+    return get_files(MODELS_PATH)
 
 
 @router.get("/vaes")

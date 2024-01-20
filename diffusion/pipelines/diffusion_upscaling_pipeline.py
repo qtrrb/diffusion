@@ -20,10 +20,9 @@ class DiffusionUpscalingPipeline(DiffusionPipeline):
         self,
         model_path: str | os.PathLike,
         vae_path: str | os.PathLike = "",
-        version: typing.Literal["v1", "v2"] = "v1",
         dtype=torch.float16,
     ):
-        super().__init__(model_path, vae_path, version, dtype)
+        super().__init__(model_path, vae_path, dtype)
 
     def load_img(self, image: PIL.Image, upscale: float | int):
         w, h = image.size
@@ -64,8 +63,7 @@ class DiffusionUpscalingPipeline(DiffusionPipeline):
         print(f"Seed set to {seed}")
         torch.manual_seed(seed)
 
-        if self.version == "v1":
-            self.model.cond_stage_model.layer_skip = layer_skip
+        self.model.cond_stage_model.layer_skip = layer_skip
 
         init_image_tensor = self.load_img(init_image, upscale).to(torch.device("cuda"))
         init_image_tensor = repeat(init_image_tensor, "1 ... -> b ...", b=batch_size)

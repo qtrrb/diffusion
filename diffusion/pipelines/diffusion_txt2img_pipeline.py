@@ -19,10 +19,9 @@ class DiffusionTxt2ImgPipeline(DiffusionPipeline):
         self,
         model_path: str | os.PathLike,
         vae_path: str | os.PathLike = "",
-        version: typing.Literal["v1", "v2"] = "v1",
         dtype=torch.float16,
     ):
-        super().__init__(model_path, vae_path, version, dtype)
+        super().__init__(model_path, vae_path, dtype)
 
     def generate(
         self,
@@ -55,8 +54,7 @@ class DiffusionTxt2ImgPipeline(DiffusionPipeline):
         print(f"Seed set to {seed}")
         torch.manual_seed(seed)
 
-        if self.version == "v1":
-            self.model.cond_stage_model.layer_skip = layer_skip
+        self.model.cond_stage_model.layer_skip = layer_skip
 
         lora_manager = LoRAManager(loras)
         lora_manager.load_loras(self.model)

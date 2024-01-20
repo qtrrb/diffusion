@@ -13,20 +13,15 @@ class DiffusionPipeline(ABC):
         self,
         model_path: str | os.PathLike,
         vae_path: str | os.PathLike = "",
-        version: typing.Literal["v1", "v2"] = "v1",
         dtype=torch.float16,
     ):
         self.model_path = model_path
         self.vae_path = vae_path
-        self.version = version
         self.dtype = dtype
         self.model = self.load_model_and_vae()
 
     def load_model_and_vae(self, verbose=False):
-        if self.version == "v1":
-            config_file = os.path.join(CONFIGS_PATH, "v1-inference.yaml")
-        else:
-            config_file = os.path.join(CONFIGS_PATH, "v2-inference.yaml")
+        config_file = os.path.join(CONFIGS_PATH, "v1-inference.yaml")
 
         config = OmegaConf.load(f"{config_file}")
 
