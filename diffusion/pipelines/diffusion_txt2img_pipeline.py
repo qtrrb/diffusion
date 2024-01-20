@@ -54,7 +54,7 @@ class DiffusionTxt2ImgPipeline(DiffusionPipeline):
         print(f"Seed set to {seed}")
         torch.manual_seed(seed)
 
-        self.model.cond_stage_model.layer_skip = layer_skip
+        self.model.cond_stage_model.layer_idx = -layer_skip
 
         lora_manager = LoRAManager(loras)
         lora_manager.load_loras(self.model)

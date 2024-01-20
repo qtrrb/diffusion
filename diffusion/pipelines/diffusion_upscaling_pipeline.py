@@ -63,7 +63,7 @@ class DiffusionUpscalingPipeline(DiffusionPipeline):
         print(f"Seed set to {seed}")
         torch.manual_seed(seed)
 
-        self.model.cond_stage_model.layer_skip = layer_skip
+        self.model.cond_stage_model.layer_idx = -layer_skip
 
         init_image_tensor = self.load_img(init_image, upscale).to(torch.device("cuda"))
         init_image_tensor = repeat(init_image_tensor, "1 ... -> b ...", b=batch_size)

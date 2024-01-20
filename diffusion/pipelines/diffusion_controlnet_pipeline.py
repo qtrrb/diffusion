@@ -126,7 +126,7 @@ class DiffusionControlNetPipeline(DiffusionPipeline):
         torch.manual_seed(seed)
 
 
-        self.model.cond_stage_model.layer_skip = layer_skip
+        self.model.cond_stage_model.layer_idx = -layer_skip
 
         control = self.load_control_image(init_image)
         _, H, W = control[0].size()

@@ -78,4 +78,4 @@ model:
     cond_stage_config:
       target: diffusion.clip.FrozenCLIPEmbedder
       params:
-        layer_skip: 1
+        layer_idx: -2

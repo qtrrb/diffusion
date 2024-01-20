@@ -12,7 +12,6 @@ setup(
         "omegaconf==2.1.1",
         "einops>=0.3.0",
         "transformers>=4.19.2",
-        "open-clip-torch>=2.7.0",
         "k-diffusion>=0.0.14",
         "pydantic>=1.10.7",
         "fastapi>=0.89.1",
