@@ -62,11 +62,6 @@ def generate_txt2img(args: TextArgs) -> bytes:
     vae = os.path.join(VAES_PATH, args.vae) if args.vae != "" else ""
     pipeline = DiffusionTxt2ImgPipeline(model, vae)
     sampler = get_sampler(args.sampler, pipeline.model)
-    embedding = (
-        Embedding(os.path.join(EMBEDDINGS_PATH, args.embedding))
-        if args.embedding != ""
-        else None
-    )
     loras = parse_lora_array(args.loras)
     prompt = args.prompt
     negative_prompt = args.negative_prompt
@@ -90,7 +85,6 @@ def generate_txt2img(args: TextArgs) -> bytes:
         W=W,
         layer_skip=layer_skip,
         loras=loras,
-        embedding=embedding,
     )[0]
 
     if args.upscale > 1:
@@ -104,7 +98,6 @@ def generate_txt2img(args: TextArgs) -> bytes:
             ddim_eta=ddim_eta,
             layer_skip=layer_skip,
             loras=loras,
-            embedding=embedding,
         )[0]
 
     img_bytes = convert_img_to_byte_array(image)
@@ -116,11 +109,6 @@ def generate_img2img(args: ImageArgs) -> bytes:
     model = os.path.join(MODELS_PATH, args.model)
     vae = os.path.join(VAES_PATH, args.vae) if args.vae != "" else ""
     pipeline = DiffusionImg2ImgPipeline(model, vae)
-    embedding = (
-        Embedding(os.path.join(EMBEDDINGS_PATH, args.embedding))
-        if args.embedding != ""
-        else None
-    )
     loras = parse_lora_array(args.loras)
     prompt = args.prompt
     negative_prompt = args.negative_prompt
@@ -143,7 +131,6 @@ def generate_img2img(args: ImageArgs) -> bytes:
         ddim_eta=ddim_eta,
         layer_skip=layer_skip,
         loras=loras,
-        embedding=embedding,
     )[0]
 
     if args.upscale > 1:
@@ -157,7 +144,6 @@ def generate_img2img(args: ImageArgs) -> bytes:
             ddim_eta=ddim_eta,
             layer_skip=layer_skip,
             loras=loras,
-            embedding=embedding,
         )[0]
 
     img_bytes = convert_img_to_byte_array(image)

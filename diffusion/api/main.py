@@ -69,17 +69,12 @@ def generate_image(args: TextArgs):
     if busy:
         raise HTTPException(status_code=429, detail="Model is overloaded")
     else:
-        try:
-            busy = True
-            image_bytes: bytes = generate_txt2img(args=args)
-            torch.cuda.empty_cache()
-            busy = False
-            # Return the image in the response
-            return Response(content=image_bytes, media_type="image/png")
-        except Exception as e:
-            busy = False
-            print(e)
-            raise HTTPException(status_code=500, detail="Error generating image")
+        busy = True
+        image_bytes: bytes = generate_txt2img(args=args)
+        torch.cuda.empty_cache()
+        busy = False
+        # Return the image in the response
+        return Response(content=image_bytes, media_type="image/png")
 
 
 @router.post(

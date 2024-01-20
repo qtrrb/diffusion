@@ -15,7 +15,6 @@ class TextArgs(BaseModel):
     width: int = 512
     layer_skip: int = 1
     loras: list[tuple[str, float]] = []
-    embedding: str = ""
     upscale: float = 1
 
 
@@ -32,5 +31,4 @@ class ImageArgs(BaseModel):
     ddim_eta: float = 0.0
     layer_skip: int = 1
     loras: list[tuple[str, float]] = []
-    embedding: str = ""
     upscale: float = 1

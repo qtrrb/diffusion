@@ -2,7 +2,9 @@ import os
 import safetensors
 import torch
 from pathlib import Path
+from typing import List
 
+from .constants import EMBEDDINGS_PATH
 
 class Embedding:
     def __init__(self, file_path: str | os.PathLike):
@@ -26,36 +28,46 @@ class Embedding:
 
 
 class TextualInversionManager:
-    def __init__(self, model, embedding: Embedding):
+    def __init__(self, model):
         self.model = model
         self.tokenizer = model.cond_stage_model.tokenizer
         self.text_encoder = model.cond_stage_model.transformer
-        self.embedding = embedding
+        self.embeddings = self.load_embeddings_from_folder(EMBEDDINGS_PATH)
 
-    def apply_textual_inversion_embeddings(self):
-        for i, emb in enumerate(self.embedding.vecs):
-            self.tokenizer.add_tokens([f"{self.embedding.token}_{i}"])
-            token_id = self.tokenizer.convert_tokens_to_ids(
-                f"{self.embedding.token}_{i}"
-            )
-            emb = emb.to(dtype=self.text_encoder.dtype, device=self.text_encoder.device)
-            self.text_encoder.resize_token_embeddings(len(self.tokenizer))
-            self.text_encoder.get_input_embeddings().weight.data[token_id] = emb
+    def load_embeddings_from_folder(self, folder_path):
+        embeddings = []
+        for file_name in os.listdir(folder_path):
+            if file_name == ".gitkeep":
+                continue
+            file_path = os.path.join(folder_path, file_name)
+            if os.path.isfile(file_path):
+                embeddings.append(Embedding(file_path))
+        return embeddings
+    
+    def process_prompt(self, prompt: str):
+        for embedding in self.embeddings:
+            if embedding.token in prompt:
+                print(f"{embedding.token} in prompt, using embedding...")
+                # Apply the embedding
+                for i, emb in enumerate(embedding.vecs):
+                    token_name = f"{embedding.token}_{i}"
+                    self.tokenizer.add_tokens([token_name])
+                    token_id = self.tokenizer.convert_tokens_to_ids(token_name)
+                    emb = emb.to(dtype=self.text_encoder.dtype, device=self.text_encoder.device)
+                    self.text_encoder.resize_token_embeddings(len(self.tokenizer))
+                    self.text_encoder.get_input_embeddings().weight.data[token_id] = emb
 
-    def replace_token_in_prompt(self, prompt: str):
-        if self.embedding.token in prompt:
-            print(f"{self.embedding.token} in prompt, using embedding...")
-            token_index = prompt.index(self.embedding.token)
-            token_replacement = " ".join(
-                [
-                    f"{self.embedding.token}_{i}"
-                    for i in range(self.embedding.vecs.size()[0])
-                ]
-            )
-            return (
-                prompt[:token_index]
-                + token_replacement
-                + prompt[token_index + len(self.embedding.token) :]
-            )
-        else:
-            return prompt
+                # Replace tokens in prompt
+                token_index = prompt.index(embedding.token)
+                token_replacement = " ".join(
+                    [
+                        f"{embedding.token}_{i}"
+                        for i in range(embedding.vecs.size()[0])
+                    ]
+                )
+                prompt = (
+                    prompt[:token_index]
+                    + token_replacement
+                    + prompt[token_index + len(embedding.token):]
+                )
+        return prompt
