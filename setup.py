@@ -9,7 +9,6 @@ setup(
     install_requires=[
         "numpy>=1.23.1",
         "safetensors>=0.3.0",
-        "pytorch-lightning>=2.0.2",
         "omegaconf==2.1.1",
         "einops>=0.3.0",
         "transformers>=4.19.2",

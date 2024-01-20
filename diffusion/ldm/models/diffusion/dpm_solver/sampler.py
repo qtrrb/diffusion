@@ -8,12 +8,13 @@ MODEL_TYPES = {"eps": "noise", "v": "v"}
 
 
 class DPMSolverSampler(object):
-    def __init__(self, model, **kwargs):
+    def __init__(self, model, device=torch.device("cuda"), **kwargs):
         super().__init__()
         self.model = model
+        self.device = device
 
         def to_torch(x):
-            return x.clone().detach().to(torch.float32).to(model.device)
+            return x.clone().detach().to(torch.float32).to(self.device)
 
         self.register_buffer("alphas_cumprod", to_torch(model.alphas_cumprod))
 

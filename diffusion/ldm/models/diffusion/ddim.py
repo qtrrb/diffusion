@@ -13,11 +13,12 @@ from ...modules.diffusionmodules.util import (
 
 
 class DDIMSampler(object):
-    def __init__(self, model, schedule="linear", **kwargs):
+    def __init__(self, model, schedule="linear", device=torch.device("cuda"), **kwargs):
         super().__init__()
         self.model = model
         self.ddpm_num_timesteps = model.num_timesteps
         self.schedule = schedule
+        self.device = device
 
     def register_buffer(self, name, attr):
         if type(attr) == torch.Tensor:
@@ -40,7 +41,7 @@ class DDIMSampler(object):
         ), "alphas have to be defined for each timestep"
 
         def to_torch(x):
-            return x.clone().detach().to(torch.float32).to(self.model.device)
+            return x.clone().detach().to(torch.float32).to(self.device)
 
         self.register_buffer("betas", to_torch(self.model.betas))
         self.register_buffer("alphas_cumprod", to_torch(alphas_cumprod))
